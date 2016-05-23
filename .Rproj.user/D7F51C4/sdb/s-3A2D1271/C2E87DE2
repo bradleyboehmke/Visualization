@@ -1,0 +1,21 @@
+{
+    "collab_server" : "",
+    "contents" : "\n\npar(bg = \"#fdfdfd\")\nplot(x = mtcars$wt, y = mtcars$mpg, xlab = NA, ylab = NA)\n\npar(bg = \"#fdfdfd\")\nbarplot(height = BOD$demand, names.arg = BOD$Time)\n\npar(bg = \"#fdfdfd\")\nplot(x = pressure$temperature, y = pressure$pressure, type = \"l\", xlab = NA, ylab = NA)\n\npar(bg = \"#fdfdfd\")\nplot(factor(mtcars$cyl), mtcars$mpg)\n\npar(mfrow=c(2,2), mar=c(3,5,2,2), las=1, bty=\"n\")\npar(bg = \"#EEEEEE\")\nplot(x = mtcars$wt, y = mtcars$mpg, xlab = NA, ylab = NA)\nbarplot(height = BOD$demand, names.arg = BOD$Time)\nplot(x = pressure$temperature, y = pressure$pressure, type = \"l\", xlab = NA, ylab = NA)\nplot(factor(mtcars$cyl), mtcars$mpg)\n\n",
+    "created" : 1463860106391.000,
+    "dirty" : true,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "3346320521",
+    "id" : "C2E87DE2",
+    "lastKnownWriteTime" : 1463858429,
+    "last_content_update" : 1463860709807,
+    "path" : "~/Desktop/Personal/Visualization/quickplot_image.R",
+    "project_path" : "quickplot_image.R",
+    "properties" : {
+        "tempName" : "Untitled3"
+    },
+    "relative_order" : 6,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_source"
+}

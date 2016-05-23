@@ -1,0 +1,21 @@
+{
+    "collab_server" : "",
+    "contents" : "library(ggplot2)\nlibrary(magrittr)\nlibrary(dplyr)\nlibrary(tidyr)\nlibrary(readxl)\n\ntheme_update(plot.background = element_rect(fill = \"#fdfdfd\"))\n\nincome <- read_excel(\"Data/PEW Middle Class Data.xlsx\", skip = 5, \n           sheet = \"3. Median HH income, metro\")\n\nhist(income$All_2014)\n\n# default\nggplot(income, aes(x = All_2014)) +\n        geom_histogram()\n\n# change binwidth and color\nggplot(income, aes(x = All_2014)) +\n        geom_histogram(binwidth = 5000, color = \"grey30\", fill = \"white\")\n\n# compare 1999 income to 2014\nincome %>%\n        select(Metro, All_1999, All_2014) %>%\n        gather(Year, Value, All_1999:All_2014) %>%\n        ggplot(., aes(x = Value, fill = Year)) +\n        geom_histogram(binwidth = 5000, alpha = .5, position = \"identity\")\n",
+    "created" : 1463668479602.000,
+    "dirty" : true,
+    "encoding" : "",
+    "folds" : "",
+    "hash" : "2106658115",
+    "id" : "7A4AC592",
+    "lastKnownWriteTime" : 1463500071,
+    "last_content_update" : 1463669655054,
+    "path" : null,
+    "project_path" : null,
+    "properties" : {
+        "tempName" : "Untitled2"
+    },
+    "relative_order" : 5,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_source"
+}

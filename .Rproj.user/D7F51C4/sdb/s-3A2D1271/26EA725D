@@ -1,0 +1,21 @@
+{
+    "collab_server" : "",
+    "contents" : "---\ntitle: \"Untitled\"\nauthor: \"Brad Boehmke\"\ndate: \"May 18, 2016\"\noutput: html_document\n---\n\n```{r, echo=FALSE, warning=FALSE, message=FALSE}\nlibrary(ggplot2)\ntheme_update(plot.background = element_rect(fill = \"#fdfdfd\"))\n\nggplot(mtcars, aes(mpg, wt)) +\n        geom_point()\n```\n\n\nThe histogram is one of my favorite chart types, and for analysis purposes, I probably use them the most. Devised by Karl Pearson (the father of mathematical statistics) in the late 1800s, it’s simple geometrically, robust, and allows you to see the distribution of a dataset.\n\nIf you don’t understand what’s driving the chart though, it can be confusing, which is probably why you don’t see it often in general publications.\n\n\n\n",
+    "created" : 1463625331816.000,
+    "dirty" : true,
+    "encoding" : "",
+    "folds" : "",
+    "hash" : "511731158",
+    "id" : "26EA725D",
+    "lastKnownWriteTime" : 6,
+    "last_content_update" : 1463629179555,
+    "path" : null,
+    "project_path" : null,
+    "properties" : {
+        "tempName" : "Untitled1"
+    },
+    "relative_order" : 4,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_markdown"
+}
