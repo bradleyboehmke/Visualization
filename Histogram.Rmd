@@ -326,7 +326,7 @@ p <- p +
               plot.caption = element_text(size = 8, margin = margin(t = 10), color = "grey70", hjust = 0),
               strip.text = element_text(size = 12),
               text = element_text(family = "Georgia"),
-              plot.background = element_rect(fill = "#fdfdfd"))
+              plot.background = element_rect(fill = "#fdfdfd", color = "#fdfdfd"))
 
 p
 ```
