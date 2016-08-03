@@ -4,17 +4,17 @@
     "created" : 1465310959486.000,
     "dirty" : false,
     "encoding" : "UTF-8",
-    "folds" : "1|19|4|0|\n10|0|25|0|\n27|41|61|0|\n62|28|168|0|\n",
+    "folds" : "",
     "hash" : "3040527219",
     "id" : "109DFDA0",
     "lastKnownWriteTime" : 1465412549,
-    "last_content_update" : 1465568515620,
+    "last_content_update" : 1470170823706,
     "path" : "~/Desktop/Personal/Visualization/Barchart.Rmd",
     "project_path" : "Barchart.Rmd",
     "properties" : {
         "tempName" : "Untitled1"
     },
-    "relative_order" : 8,
+    "relative_order" : 5,
     "source_on_save" : false,
     "source_window" : "",
     "type" : "r_markdown"
