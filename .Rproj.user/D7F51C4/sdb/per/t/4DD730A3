@@ -1,0 +1,29 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1471207794473.000,
+    "dirty" : false,
+    "encoding" : "",
+    "folds" : "",
+    "hash" : "0",
+    "id" : "4DD730A3",
+    "lastKnownWriteTime" : 4294967296,
+    "last_content_update" : 1471207794473,
+    "path" : null,
+    "project_path" : null,
+    "properties" : {
+        "cacheKey" : "D2BD4C66",
+        "caption" : "top25",
+        "contentUrl" : "grid_resource/gridviewer.html?env=&obj=top25&cache_key=D2BD4C66",
+        "displayedObservations" : 75,
+        "environment" : "",
+        "object" : "top25",
+        "preview" : 0,
+        "totalObservations" : 75,
+        "variables" : 3
+    },
+    "relative_order" : 6,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_dataframe"
+}
