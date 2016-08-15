@@ -27,6 +27,7 @@ To reproduce the code throughout this tutorial you will need to load the followi
 
 ```{r, echo=TRUE, message=FALSE, warning=FALSE, collapse=TRUE}
 library(dplyr)          # for data manipulation
+library(tidyr)
 library(ggplot2)        # for generating the visualizations
 ```
 
@@ -89,9 +90,9 @@ ggplot(ohio_top25, aes(percollege, county)) +
 <br>
 
 ## Comparing Multiple Points of Information {#groups}
-Consider the case where we want to compare counties in Ohio to see how they differ from the state average.  We have a couple of options to do this. First we could compare by mapping the `x = ` argument within `geom_segment` to the state average and then color the counties based on if they are above or below average.
+Consider the case where we want to compare counties in Ohio to see how they differ from the state average.  For this the emphasis becomes the state average so we can do a data manipulation to generate the state average value and test if each county above or below that value.
 
-```{r, warning=FALSE, message=FALSE, fig.align='center', fig.height=11}
+```{r, warning=FALSE, message=FALSE, fig.align='center', fig.height=11, collapse=TRUE}
 ohio <- midwest %>%
         filter(state == "OH") %>%
         select(county, percollege) %>%
@@ -100,25 +101,41 @@ ohio <- midwest %>%
                Above = ifelse(percollege - Avg > 0, TRUE, FALSE),
                county = factor(county, levels = .$county))
 
+head(ohio)
+```
+We can now incorporate this data into graphic by mapping the `x = ` argument within `geom_segment` to the state average and then color the counties based on if they are above or below average.
 
+```{r, warning=FALSE, message=FALSE, fig.align='center', fig.height=11, collapse=TRUE}
 ggplot(ohio, aes(percollege, county, color = Above)) +
-         geom_segment(aes(x = Avg, y = county, xend = percollege, yend = county), color = "grey50") +
+        geom_segment(aes(x = Avg, y = county, xend = percollege, yend = county), color = "grey50") +
         geom_point()
 ```
 
+Another comparison approach is if we wanted to compare the top 10 counties for each of the midwest states in our data set. In this case we have to do additional manipulation as each state has a couple county names that are common.
 
-We could correct this by joining the county and state variable; however, plottin all 75 counties in a single graph makes it difficult to compare state performance.  A more appropriate way to compare is to us facetting by county.
 
+```{r, message=FALSE}
+top10 <- midwest %>%
+        select(state, county, percollege) %>%
+        group_by(state) %>%
+        arrange(desc(percollege)) %>%
+        top_n(10) %>%
+        arrange(percollege) %>%
+        unite(county_st, county, state, remove = FALSE) %>%
+        mutate(county_st = factor(county_st, levels = .$county_st))
 
-```{r, eval=FALSE, warning=FALSE, message=FALSE}
-top25
-
-ggplot(top25, aes(percollege, county)) +
-         geom_segment(aes(x = 0, y = county, xend = percollege, yend = county), color = "grey50") +
-        geom_point() +
-        facet_wrap(~ state, scales = "free_y")
+head(top10)
 ```
 
+We can now plot our data and facet by state to get small multiples representing the top 10 counties for each state. Here I abbreviate the names for brevity.
+
+```{r, warning=FALSE, message=FALSE, fig.align='center', fig.height=5, collapse=TRUE}
+ggplot(top10, aes(percollege, county_st)) +
+         geom_segment(aes(x = 0, y = county_st, xend = percollege, yend = county_st), color = "grey50") +
+        geom_point() +
+        scale_y_discrete(labels = abbreviate) +
+        facet_wrap(~ state, scales = "free_y")
+```
 
 
 <a href="#top">Go to top</a>
@@ -126,9 +143,31 @@ ggplot(top25, aes(percollege, county)) +
 <br>
 
 ## Adding Value Markers {#markers}
+Depending on the number of categories (i.e. counties) you are trying to graphically display, and the range of the x-axis, it can be helpful to add value markers to the points to clarify the difference between the points.
 
+```{r, warning=FALSE, message=FALSE, fig.align='center', fig.height=5, collapse=TRUE}
+OH_top10 <- midwest %>%
+        select(state, county, percollege) %>%
+        filter(state == "OH") %>%
+        arrange(desc(percollege)) %>%
+        top_n(10) %>%
+        arrange(percollege) %>%
+        mutate(county = factor(county, levels = .$county))
 
+ggplot(OH_top10, aes(percollege, county, label = round(percollege, 1))) +
+         geom_segment(aes(x = 0, y = county, xend = percollege, yend = county), color = "grey50") +
+        geom_point() +
+        geom_text(nudge_x = 1.5)
+```
 
+Alternatively you can enlarge the dots to include the labelling inside of them.
+
+```{r, warning=FALSE, message=FALSE, fig.align='center', fig.height=5, collapse=TRUE}
+ggplot(OH_top10, aes(percollege, county, label = paste0(round(percollege, 0), "%"))) +
+         geom_segment(aes(x = 0, y = county, xend = percollege, yend = county), color = "grey50") +
+        geom_point(size = 7) +
+        geom_text(color = "white", size = 2)
+```
 
 
 <a href="#top">Go to top</a>
@@ -136,7 +175,7 @@ ggplot(top25, aes(percollege, county)) +
 <br>
 
 ## Finishing Touches {#finishing}
-
+Now let's take one of these outputs and create a nice, publication worthy graphic. 
 
 
 <a href="#top">Go to top</a>
