@@ -1,2 +1,3 @@
 "0","library(dplyr)          # for data manipulation"
+"0","library(tidyr)          # for data tidying"
 "0","library(ggplot2)        # for generating the visualizations"

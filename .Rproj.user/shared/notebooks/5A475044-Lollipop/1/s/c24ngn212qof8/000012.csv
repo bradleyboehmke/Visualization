@@ -1,4 +1,0 @@
-"0","ggplot(OH_top10, aes(percollege, county, label = paste0(round(percollege, 0), ""%""))) +"
-"0","         geom_segment(aes(x = 0, y = county, xend = percollege, yend = county), color = ""grey50"") +"
-"0","        geom_point(size = 8) +"
-"0","        geom_text(color = ""white"", size = 2)"

@@ -6,8 +6,6 @@
 "0","        arrange(percollege) %>%"
 "0","        unite(county_st, county, state, remove = FALSE) %>%"
 "0","        mutate(county_st = factor(county_st, levels = .$county_st))"
-"2","Selecting by percollege
-"
 "0","head(top10)"
 "1","Source: local data frame "
 "1","[6 x 4]"

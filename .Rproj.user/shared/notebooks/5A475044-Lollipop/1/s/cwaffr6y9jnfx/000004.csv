@@ -8,4 +8,4 @@
 "0","ggplot(OH_top10, aes(percollege, county, label = round(percollege, 1))) +"
 "0","         geom_segment(aes(x = 0, y = county, xend = percollege, yend = county), color = ""grey50"") +"
 "0","        geom_point() +"
-"0","        geom_text(nudge_x = .5)"
+"0","        geom_text(nudge_x = 1.5)"

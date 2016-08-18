@@ -58,6 +58,3 @@
 "1"," FALSE"
 "1","
 "
-"0","ggplot(ohio, aes(percollege, county, color = Above)) +"
-"0","         geom_segment(aes(x = Avg, y = county, xend = percollege, yend = county), color = ""grey50"") +"
-"0","        geom_point()"
