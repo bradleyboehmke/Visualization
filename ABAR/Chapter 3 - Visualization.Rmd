@@ -9,11 +9,75 @@ Visual data exploration is a mandatory intial step whether or not more formal an
 
 Regardless, visual data exploration is about investigating the characteristics of your data set.  To do this, we typically create numerous plots in an interactive fashion.  This chapter will show you how to create plots that answer some of the fundamental questions we typically have of our data.  
 
+
+```{r packages, message=FALSE, warning=FALSE}
+library(tidyverse)
+```
+
+```{r data, message=FALSE, warning=FALSE}
+(ames <- AmesHousing::make_ames())
+```
+
+```{r setup, message=FALSE, warning=FALSE}
+theme_set(theme_minimal())
+knitr::opts_chunk$set(warning = FALSE, message = FALSE, collapse = TRUE, fig.align = 'center')
+```
+
 # Visualizing Continuous Variables
 
-- histograms, density plot, freqpoly
+A variable is continuous if it can take any of an infinite set of ordered values. There are several different plots that can effectively communicate the different features of continous variables.  Features we are generally interested in include:
+
+- Measures of location
+- Measures of spread
+- Asymmetry
+- Outliers
+- Gaps
+
+
+Histograms are often overlooked, yet they are a very efficient means for communicating the distribution of continuous variables. Formulated by Karl Pearson, histograms display numeric values on the x-axis where the continuous variable is broken into intervals (aka bins) and the the y-axis represents the frequency of observations that fall into that bin. Histograms quickly signal what the most common observations are for the variable being assessed (the higher the bar the more frequent those values are observed in the data); they also signal the shape of your data by illustrating if the observed values cluster towards one end or the other of the distribution.
+
+To get a quick sense of how sales prices are distributed across the 2,930 properties in Ames, IA we can generate a simple histogram by applying ggplot’s `geom_histogram()` function. We can see that sales prices range from about \$10,000 to over \$700,000 with the majority of sales prices clustered in the low to mid $100,000 range.
+
+```{r hist1}
+ggplot(ames, aes(Sale_Price)) +
+  geom_histogram()
+```
+
+By default, `geom_histogram()` will divide your data into 30 equal bins or intervals. Since sales prices range from $12,789 - $755,000, dividing this range into 30 equal bins means the bin width is $24,740. So the first bar will represent the frequency of 2014 median incomes that range from $39,751 to 41,510, the second bar represents the income range from 41,510 to 43,268, and so on.
+
+However, we can control this parameter by changing the bin width argument in geom_histogram(). By changing the bin width when doing exploratory analysis you can get a clearer picture of the relative densities of the distribution. For instance, in the default histogram there was a bin of high $50,000 income values that had the highest frequency but as the histograms that follow show, this changes as we change the bin width. Overall, the histograms consistently show the most common income level to be in the mid $60,000 range. In addition, I usually change the outline and fill color of the bars with color and fill arguments to better illustrate the bars.
+
+```{r hist2}
+p1 <- ggplot(ames, aes(Sale_Price)) +
+  geom_histogram(binwidth = 5000) +
+  ggtitle("Bin width = 10000")
+
+p2 <- ggplot(ames, aes(Sale_Price)) +
+  geom_histogram(binwidth = 50000) +
+  ggtitle("Bin width = 10000")
+
+p3 <- ggplot(ames, aes(Sale_Price)) +
+  geom_histogram(binwidth = 100000) +
+  ggtitle("Bin width = 10000")
+
+gridExtra::grid.arrange(p1, p2, p3, ncol=3)
+```
+
 - boxplots, stripchart
+
+```{r boxplot}
+ggplot(ames, aes("var", Sale_Price)) +
+  geom_boxplot() +
+  coord_flip()
+```
+
+
 - Q-Q plots
+
+```{r qqplot}
+qqnorm(ames$Sale_Price)
+qqline(ames$Sale_Price)
+```
 
 
 # Visualizing Categorical Variables
