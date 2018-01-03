@@ -1,3 +1,0 @@
-"0","# dot plot"
-"0","ggplot(ohio_top25, aes(percollege, county)) +"
-"0","        geom_point()"

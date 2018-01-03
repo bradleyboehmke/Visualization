@@ -1,5 +1,0 @@
-"0","ggplot(top10, aes(percollege, county_st)) +"
-"0","         geom_segment(aes(x = 0, y = county_st, xend = percollege, yend = county_st), color = ""grey50"") +"
-"0","        geom_point() +"
-"0","        scale_y_discrete(labels = abbreviate) +"
-"0","        facet_wrap(~ state, scales = ""free_y"")"

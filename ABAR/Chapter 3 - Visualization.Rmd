@@ -18,14 +18,14 @@ library(tidyverse)
 (ames <- AmesHousing::make_ames())
 ```
 
-```{r setup, message=FALSE, warning=FALSE}
+```{r setup, message=FALSE, warning=FALSE, echo=FALSE}
 theme_set(theme_minimal())
 knitr::opts_chunk$set(warning = FALSE, message = FALSE, collapse = TRUE, fig.align = 'center')
 ```
 
 # Visualizing Continuous Variables
 
-A variable is continuous if it can take any of an infinite set of ordered values. There are several different plots that can effectively communicate the different features of continous variables.  Features we are generally interested in include:
+A variable is continuous if it can take any of an infinite set of ordered values. There are several different plots that can effectively communicate the different features of continuous variables.  Features we are generally interested in include:
 
 - Measures of location
 - Measures of spread
@@ -34,34 +34,80 @@ A variable is continuous if it can take any of an infinite set of ordered values
 - Gaps
 
 
-Histograms are often overlooked, yet they are a very efficient means for communicating the distribution of continuous variables. Formulated by Karl Pearson, histograms display numeric values on the x-axis where the continuous variable is broken into intervals (aka bins) and the the y-axis represents the frequency of observations that fall into that bin. Histograms quickly signal what the most common observations are for the variable being assessed (the higher the bar the more frequent those values are observed in the data); they also signal the shape of your data by illustrating if the observed values cluster towards one end or the other of the distribution.
+Histograms are often overlooked, yet they are a very efficient means for communicating these features of continuous variables. Formulated by Karl Pearson, histograms display numeric values on the x-axis where the continuous variable is broken into intervals (aka bins) and the the y-axis represents the frequency of observations that fall into that bin. Histograms quickly signal what the most common observations are for the variable being assessed (the higher the bar the more frequent those values are observed in the data); they also signal the shape of your data by illustrating if the observed values cluster towards one end or the other of the distribution.
 
-To get a quick sense of how sales prices are distributed across the 2,930 properties in Ames, IA we can generate a simple histogram by applying ggplot’s `geom_histogram()` function. We can see that sales prices range from about \$10,000 to over \$700,000 with the majority of sales prices clustered in the low to mid $100,000 range.
+To get a quick sense of how sales prices are distributed across the 2,930 properties in the `ames` data we can generate a simple histogram by applying ggplot’s `geom_histogram()` function. This histogram tells us several important features about our variable:
 
-```{r hist1}
+- Measures of location: We can see the most common `Sale_Price` is around the low $100K.
+- Measures of spread: Our `Sale_Price` ranges from near zero to over $700K.
+- Asymmetry: `Sale_Price` is skewed right.  Depending on the analytic technique we may want to apply later on this suggests we will likely need to transform this variable.
+- Outliers: It appears that there are some large values far from the other `Sale_Price` values.  Whether these are outliers in the mathematical sense or outliers to be concerned about is another issue but for now we at least know they exist.
+- Gaps: We see a gap exists between `Sale_Price` values around $650K and $700K+.  
+
+```{r hist1, fig.height=3, fig.width=5}
 ggplot(ames, aes(Sale_Price)) +
   geom_histogram()
 ```
 
-By default, `geom_histogram()` will divide your data into 30 equal bins or intervals. Since sales prices range from $12,789 - $755,000, dividing this range into 30 equal bins means the bin width is $24,740. So the first bar will represent the frequency of 2014 median incomes that range from $39,751 to 41,510, the second bar represents the income range from 41,510 to 43,268, and so on.
+By default, `geom_histogram()` will divide your data into 30 equal bins or intervals. Since sales prices range from \$12,789 - \$755,000, dividing this range into 30 equal bins means the bin width is \$24,740. So the first bar will represent the frequency of `Sale_Price` values that range from about \$12,500 to about \$37,500[^bins], the second bar represents the income range from about 37,500 to 62,300, and so on.
 
-However, we can control this parameter by changing the bin width argument in geom_histogram(). By changing the bin width when doing exploratory analysis you can get a clearer picture of the relative densities of the distribution. For instance, in the default histogram there was a bin of high $50,000 income values that had the highest frequency but as the histograms that follow show, this changes as we change the bin width. Overall, the histograms consistently show the most common income level to be in the mid $60,000 range. In addition, I usually change the outline and fill color of the bars with color and fill arguments to better illustrate the bars.
+However, we can control this parameter by changing the bin width argument in `geom_histogram`. By changing the bin width when doing exploratory analysis you can get a more detailed picture of the relative densities of the distribution. For instance, in the default histogram there was a bin of \$136,000 - \$161,000 values that had the highest frequency but as the histograms that follow show, we can get gather more information as we adjust the binning. 
 
-```{r hist2}
+```{r hist2, fig.height=3, fig.width=8}
 p1 <- ggplot(ames, aes(Sale_Price)) +
-  geom_histogram(binwidth = 5000) +
-  ggtitle("Bin width = 10000")
+  geom_histogram(binwidth = 100000) +
+  ggtitle("Bin width = $100,000")
 
 p2 <- ggplot(ames, aes(Sale_Price)) +
   geom_histogram(binwidth = 50000) +
-  ggtitle("Bin width = 10000")
+  ggtitle("Bin width = $50,000")
 
 p3 <- ggplot(ames, aes(Sale_Price)) +
-  geom_histogram(binwidth = 100000) +
-  ggtitle("Bin width = 10000")
+  geom_histogram(binwidth = 5000) +
+  ggtitle("Bin width = $5,000")
 
-gridExtra::grid.arrange(p1, p2, p3, ncol=3)
+p4 <- ggplot(ames, aes(Sale_Price)) +
+  geom_histogram(binwidth = 1000) +
+  ggtitle("Bin width = $1,000")
+
+gridExtra::grid.arrange(p1, p2, p3, p4, ncol = 2)
 ```
+
+Overall, the histograms consistently show the most common income level to be right around \$130,000. We can also find the most frequent bin by combining `ggplot2::cut_width` (`ggplot2::cut_interval` and `ggplot2::cut_number` are additional options) with `dplyr::count`. We see that the most frequent bin when using increments of \$5,000 is \$128,000 - \$132,000.
+
+```{r}
+ames %>%
+  count(cut_width(Sale_Price, width = 5000)) %>%
+  arrange(desc(n))
+```
+
+Our histogram with `binwidth = 1000` also shows us that there are spikes at specific intervals.  This likely due to home sales prices usually occuring around increments of \$5,000.  In addition to our primary central tendency (bins with most frequency), we also get a clearer picture of the spread of our variable and the fact that it is skewed right (a common issue with financial data).  This suggests there may be concern with our variable meeting assumptions of normality.  If we were to apply an analytic technique that is sensitive to normality assumptions we would likely need to transform our variable.
+
+We can assess the applicability of a log transformation
+
+```{r logtrans, fig.height=3, fig.width=5}
+ggplot(ames, aes(Sale_Price)) +
+  geom_histogram(bins = 100) +
+  scale_x_log10()
+```
+
+
+
+If you really want to look at normality, then Q-Q plots are a great visual to assess (Fig xx). This 
+
+```{r qqplot, fig.height=3, fig.width=6}
+par(mfrow = c(1, 2))
+
+# non-log transformed
+qqnorm(ames$Sale_Price)
+qqline(ames$Sale_Price)
+
+# log transformed
+qqnorm(log(ames$Sale_Price))
+qqline(log(ames$Sale_Price))
+```
+
+
 
 - boxplots, stripchart
 
@@ -71,13 +117,6 @@ ggplot(ames, aes("var", Sale_Price)) +
   coord_flip()
 ```
 
-
-- Q-Q plots
-
-```{r qqplot}
-qqnorm(ames$Sale_Price)
-qqline(ames$Sale_Price)
-```
 
 
 # Visualizing Categorical Variables
@@ -104,3 +143,7 @@ qqline(ames$Sale_Price)
 
 - Missingness
 - Outliers
+
+
+
+[^bins]: These are approximates because the binning will round to whole numbers (12,800 rather than 12,370.)

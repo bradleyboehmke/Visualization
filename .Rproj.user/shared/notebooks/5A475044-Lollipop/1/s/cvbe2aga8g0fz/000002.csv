@@ -1,7 +1,0 @@
-"0","ohio_top25 <- midwest %>%"
-"0","        filter(state == ""OH"") %>%"
-"0","        select(county, percollege) %>%"
-"0","        arrange(desc(percollege)) %>%"
-"0","        top_n(25) %>%"
-"0","        arrange(percollege) %>%"
-"0","        mutate(county = factor(county, levels = .$county))"
