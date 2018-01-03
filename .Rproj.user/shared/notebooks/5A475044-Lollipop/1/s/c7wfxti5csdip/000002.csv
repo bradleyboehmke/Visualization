@@ -1,4 +1,0 @@
-"0","# bar chart"
-"0","ggplot(ohio_top25, aes(county, percollege)) +"
-"0","        geom_bar(stat = ""identity"") +"
-"0","        coord_flip()"

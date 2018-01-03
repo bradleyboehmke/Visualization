@@ -1,4 +1,0 @@
-"0","# lollipop chart"
-"0","ggplot(ohio_top25, aes(percollege, county)) +"
-"0","         geom_segment(aes(x = 0, y = county, xend = percollege, yend = county), color = ""grey50"") +"
-"0","        geom_point()"
