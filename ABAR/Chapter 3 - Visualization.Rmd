@@ -35,13 +35,13 @@ A variable is continuous if it can take any of an infinite set of ordered values
 - Gaps
 
 
-Histograms are often overlooked, yet they are a very efficient means for communicating these features of continuous variables. Formulated by Karl Pearson, histograms display numeric values on the x-axis where the continuous variable is broken into intervals (aka bins) and the the y-axis represents the frequency of observations that fall into that bin. Histograms quickly signal what the most common observations are for the variable being assessed (the higher the bar the more frequent those values are observed in the data); they also signal the shape of your data by illustrating if the observed values cluster towards one end or the other of the distribution.
+Histograms are often overlooked, yet they are a very efficient means for communicating these features of continuous variables. Formulated by Karl Pearson, histograms display numeric values on the x-axis where the continuous variable is broken into intervals (aka bins) and the the y-axis represents the frequency of observations that fall into that bin. Histograms quickly signal what the most common observations are for the variable being assessed (the higher the bar the more frequent those values are observed in the data); they also signal the shape (spread and symmetr) of your data by illustrating if the observed values cluster towards one end or the other of the distribution.
 
-To get a quick sense of how sales prices are distributed across the 2,930 properties in the `ames` data we can generate a simple histogram by applying ggplot’s `geom_histogram()` function. This histogram tells us several important features about our variable:
+To get a quick sense of how sales prices are distributed across the 2,930 properties in the `ames` data we can generate a simple histogram by applying ggplot’s `geom_histogram` function[^baseRhist]. This histogram tells us several important features about our variable:
 
 - Measures of location: We can see the most common `Sale_Price` is around the low $100K.
 - Measures of spread: Our `Sale_Price` ranges from near zero to over $700K.
-- Asymmetry: `Sale_Price` is skewed right.  Depending on the analytic technique we may want to apply later on this suggests we will likely need to transform this variable.
+- Asymmetry: `Sale_Price` is skewed right (a common issue with financial data).  Depending on the analytic technique we may want to apply later on this suggests we will likely need to transform this variable.
 - Outliers: It appears that there are some large values far from the other `Sale_Price` values.  Whether these are outliers in the mathematical sense or outliers to be concerned about is another issue but for now we at least know they exist.
 - Gaps: We see a gap exists between `Sale_Price` values around $650K and $700K+.  
 
@@ -52,7 +52,7 @@ ggplot(ames, aes(Sale_Price)) +
 
 By default, `geom_histogram()` will divide your data into 30 equal bins or intervals. Since sales prices range from \$12,789 - \$755,000, dividing this range into 30 equal bins means the bin width is \$24,740. So the first bar will represent the frequency of `Sale_Price` values that range from about \$12,500 to about \$37,500[^bins], the second bar represents the income range from about 37,500 to 62,300, and so on.
 
-However, we can control this parameter by changing the bin width argument in `geom_histogram`. By changing the bin width when doing exploratory analysis you can get a more detailed picture of the relative densities of the distribution. For instance, in the default histogram there was a bin of \$136,000 - \$161,000 values that had the highest frequency but as the histograms that follow show, we can get gather more information as we adjust the binning. 
+However, we can control this parameter by changing the bin width argument in `geom_histogram`. By changing the bin width when doing exploratory analysis you can get a more detailed picture of the relative densities of the distribution. For instance, in the default histogram there was a bin of \$136,000 - \$161,000 values that had the highest frequency but as the histograms that follow show, we can gather more information as we adjust the binning. 
 
 ```{r hist2, fig.height=5, fig.width=8}
 
@@ -83,23 +83,25 @@ ames %>%
   arrange(desc(n))
 ```
 
-Our histogram with `binwidth = 1000` also shows us that there are spikes at specific intervals.  This is likely due to home sale prices usually occuring around increments of \$5,000.  In addition to our primary central tendency (bins with most frequency), we also get a clearer picture of the spread of our variable and the fact that it is skewed right (a common issue with financial data).  This suggests there may be a concern with our variable meeting assumptions of normality.  If we were to apply an analytic technique that is sensitive to normality assumptions we would likely need to transform our variable.
+Our histogram with `binwidth = 1000` also shows us that there are spikes at specific intervals.  This is likely due to home sale prices usually occuring around increments of \$5,000.  In addition to our primary central tendency (bins with most frequency), we also get a clearer picture of the spread of our variable and its skewness.  This suggests there may be a concern with our variable meeting assumptions of normality.  If we were to apply an analytic technique that is sensitive to normality assumptions we would likely need to transform our variable.
 
-We can assess the applicability of a log transformation by adding `scale_x_log()` to our ggplot visual[^transf]. This log transformed histogram provides a couple new insights:
+We can assess the applicability of a log transformation by adding `scale_x_log()` to our ggplot visual[^transf]. This log transformed histogram provides a few new insights:
 
-1. It appears the log transformation helps our variable meet normality assumptions.  More on this in a second.
-2. It appears there is a new potential outlier that we did not see earlier.  There is at least one observation where the `Sale_Price` is near zero.  In fact, further investigation identifies two observations, one with a `Sale_Price` of \$12,789 and another at \$13,100.
+1. There is a slight multimodal effect at the top of the distribution suggesting that houses selling in the \$150-170K range are not as common as those selling just below and above that price range.
+2. It appears the log transformation helps our variable meet normality assumptions.  More on this in a second.
+3. It appears there is a new potential outlier that we did not see earlier.  There is at least one observation where the `Sale_Price` is near zero.  In fact, further investigation identifies two observations, one with a `Sale_Price` of \$12,789 and another at \$13,100.
 
 ```{r logtrans, fig.height=3, fig.width=5}
 ggplot(ames, aes(Sale_Price)) +
   geom_histogram(bins = 100) +
+  geom_vline(xintercept = c(150000, 170000), color = "red", lty = "dashed") +
   scale_x_log10(
     labels = scales::dollar, 
     breaks = c(50000, 125000, 300000)
     )
 ```
 
-Let's take a closer look at these two insights.  First, we'll consider the issue of normality.
+Let's take a closer look at the second two insights.  First, we'll consider the issue of normality.
 
 If you really want to look at normality, then Q-Q plots are a great visual to assess (Fig xx). This graph plots the cumulative values we have in our data against the cumulative probability of a particular distribution (the default is a normal distribution). In essence, this plot compares the actual value against the expected value that the score should have in a normal distribution. If the data are normally distributed the plot will display a straight (or nearly straight) line. If the data deviates from normality then the line will display strong curvature or "snaking."  These plots illustrate how much the untransformed variable deviates from normality whereas the log transformed values align much closer to a normal distribution.
 
@@ -117,15 +119,17 @@ qqline(log(ames$Sale_Price))
 
 I also mentioned how we obtained a new insight regarding a new potential outlier that we did not see earlier.  So far our histogram identified potential outliers at the lower end and upper end of the sale price spectrum. Unfortunately histograms are not very good at delineating outliers.  Rather, we can use a boxplot which does a better job identifying specific outliers.
 
-Boxplots are an alternative way to illustrate the distribution of a variable and is a concise way to illustrate the standard quantiles and outliers of data. As Figure XX indicates, the box itself extends, left to right, from the 1st quartile to the 3rd quartile. This means that it contains the middle half of the data. The line inside the box is positioned at the median. The lines (whiskers) coming out either side of the box extend to 1.5 interquartile ranges (IQRs) from the quartlies. These generally include most of the data outside the box. More distant values, called outliers, are denoted separately by individual points. Now we have a more analytically specific approach to identifying outliers. 
+Boxplots are an alternative way to illustrate the distribution of a variable and is a concise way to illustrate the standard quantiles and outliers of data. As Figure XX indicates, the box itself extends, left to right, from the 1st quartile to the 3rd quartile. This means that it contains the middle half of the data. The line inside the box is positioned at the median. The lines (whiskers) coming out either side of the box extend to 1.5 interquartile ranges (IQRs) from the quartiles. These generally include most of the data outside the box. More distant values, called outliers, are denoted separately by individual points. Now we have a more analytically specific approach to identifying outliers. 
 
 <center>
 <img src="https://www.leansigmacorporation.com/wp/wp-content/uploads/2015/12/Box-Plot-MTB_01.png" alt="Generic Box Plot" width="500" vspace="20">
 </center>
 
+There are two efficient graphs to get an indication of potential outliers in our data.  The classic boxplot on the left will identify points beyond the whiskers which are beyond $1.5*IQR$ from the first and third quantile.  This illustrates there are several additional observations that we may need to assess as outliers that were not evident in our histogram.  However, when looking at a boxplot we lose insight into the shape of the distribution.  A violin plot on the right provides us a similar chart as the boxplot but we lose insight into the quantiles of our data and outliers are not plotted (hence the reason I plot `geom_point` prior to `geom_violin`).  Violin plots will come in handy later when we start to visualize multiple distributions along side each other.
+
 ```{r boxplot, fig.align='center'}
 p1 <- ggplot(ames, aes("var", Sale_Price)) +
-  geom_boxplot() +
+  geom_boxplot(outlier.alpha = .25) +
   scale_y_log10(
     labels = scales::dollar, 
     breaks = quantile(ames$Sale_Price)
@@ -140,6 +144,13 @@ p2 <- ggplot(ames, aes("var", Sale_Price)) +
   )
 
 gridExtra::grid.arrange(p1, p2, ncol = 2)
+```
+
+The boxplot starts to answer the question of what potential outliers exist in your data. Outliers in data can distort predictions and affect their accuracy. Consequently, its important to understand if outliers are present and, if so, which observations are considered outliers. Boxplots provide a visual assessment of potential outliers while the `outliers` package provides a number of useful functions to systematically extract outliers. The most useful function is the `scores` function, which computes normal, t, chi-squared, IQR and MAD scores of the given data which you can use to find observation(s) that lie beyond a given value.
+
+```{r}
+outliers <- outliers::scores(log(ames$Sale_Price), type = "iqr", lim = 1.5)
+stem(ames$Sale_Price[outliers])
 ```
 
 
@@ -171,7 +182,7 @@ gridExtra::grid.arrange(p1, p2, ncol = 2)
 - Outliers
 
 
-
+[^baseRhist]: We could also use `hist(ames$Sale_Price)` to produce a histogram with base R graphics.
 [^bins]: These are approximates because the binning will round to whole numbers (12,800 rather than 12,370.)
 [^transf]: Two things to note here. 1. If you want to change the binwidth you either need to feed a log tranformed number to binwidth or, as I did, increase the bins by using `bins = 100`. 2. If you have values of zero in your variable try `scale_x_continuous(trans = "log1p"), which adds 1 prior to the log transformation.
 
