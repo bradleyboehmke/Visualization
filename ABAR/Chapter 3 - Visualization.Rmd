@@ -146,17 +146,66 @@ p2 <- ggplot(ames, aes("var", Sale_Price)) +
 gridExtra::grid.arrange(p1, p2, ncol = 2)
 ```
 
-The boxplot starts to answer the question of what potential outliers exist in your data. Outliers in data can distort predictions and affect their accuracy. Consequently, its important to understand if outliers are present and, if so, which observations are considered outliers. Boxplots provide a visual assessment of potential outliers while the `outliers` package provides a number of useful functions to systematically extract outliers. The most useful function is the `scores` function, which computes normal, t, chi-squared, IQR and MAD scores of the given data which you can use to find observation(s) that lie beyond a given value.
+The boxplot starts to answer the question of what potential outliers exist in your data. Outliers in data can distort predictions and affect their accuracy. Consequently, its important to understand if outliers are present and, if so, which observations are considered outliers. Boxplots provide a visual assessment of potential outliers while the `outliers` package provides a number of useful functions to systematically extract these outliers. The most useful function is the `scores` function, which computes normal, t, chi-squared, IQR and MAD scores of the given data which you can use to find observation(s) that lie beyond a given value.
 
-```{r}
+Here, I use the `outliers::score` function to extract those observations beyond the whiskers in our boxplot and then use a stem and leaf plot to assess them.  A stem and leaf plot is a special table where each data value is split into a "stem" (the first digit or digits) and a "leaf" (usually the second digit).  Since the decimal point is located 5 digits to the right of the "|"" the last stem of "7" and and first leaf of "5" means an outlier exists at around \$750,000.  The last stem of "7" and and second leaf of "6" means an outlier exists at around \$760,000.  This is a concise way to see approximately where our outliers are.  In fact, I can now see that I have 28 lower end outliers ranging from \$10,000-\$60,000 and 32 upper end outliers ranging from \$450,000-\$760,000.
+
+```{r stem}
 outliers <- outliers::scores(log(ames$Sale_Price), type = "iqr", lim = 1.5)
 stem(ames$Sale_Price[outliers])
 ```
 
+Another useful plot for univariate assessment includes the *smoothed* histogram in which a non-parametric approach is used to estimate the density function. Displaying in density form just means the y-axis is now in a probability scale where the proportion of the given value (or bin of values) to the overall population is displayed. In essence, the y-axis tells you the estimated probability of the x-axis value occurring.  This results in a *smoothed* curve known as the density plot that allows us visualize the distribution.  Since the focus of a density plot is to view the overall distribution rather than individual bin observations we lose insight into how many observations occur at certain x values.  Consequently, it can be helpful to use `geom_rug` with `geom_density` to highlight where clusters, outliers, and gaps of observations are occuring.
+
+```{r density, fig.align='center', fig.width=9, fig.height=4}
+p1 <- ggplot(ames, aes(Sale_Price)) +
+  geom_density()
+
+p2 <- ggplot(ames, aes(Sale_Price)) +
+  geom_density() +
+  geom_rug()
+
+gridExtra::grid.arrange(p1, p2, nrow = 1)
+```
+
+Often you will see density plots layered onto histograms. To layer the density plot onto the histogram we need to first draw the histogram but tell ggplot to have the y-axis in density form rather than count. You can then add the `geom_density` function to add the density plot on top.
+
+```{r density2, fig.align='center', fig.width=6, fig.height=3}
+ggplot(ames, aes(Sale_Price)) +
+  geom_histogram(aes(y = ..density..),
+                 binwidth = 5000, color = "grey30", fill = "white") +
+  geom_density(alpha = .2, fill = "antiquewhite3")
+```
+
+You may also be interested to see if there are any systematic groupings with how the data is structured.  For example, using base R's `plot` function with just the `Sale_Price` will plot the sale price versus the index (row) number of each observation.  In the plot below we see a pattern which indicates that groupings of homes with high versus lower sale prices are concentrated together throughout the data set. 
+
+```{r indexplot, fig.align='center', fig.width=7, fig.height=3}
+plot(ames$Sale_Price)
+```
 
 
+
+There are also a couple plots that can come in handy when dealing with smaller data sets.  For example, the dotplot below provides more clarity than the histogram for viewing the distribution of `mpg` in the built-in `mtcars` dataset with only 32 observations.  An alternative to this would be using a strip chart (see `stripchart`). 
+
+```{r dotplot, fig.align='center', fig.width=9, fig.height=4}
+p1 <- ggplot(mtcars, aes(x = mpg)) +
+  geom_dotplot(method = "histodot", binwidth = 1) +
+  ggtitle("dotplot")
+
+p2 <- ggplot(mtcars, aes(x = mpg)) +
+  geom_histogram(binwidth = 1) +
+  ggtitle("histogram")
+
+gridExtra::grid.arrange(p1, p2, nrow = 1)
+```
+
+As demonstrated, several plots exist for examining univariate continuous variables.  Several exampes were provided here but still more exist (i.e. frequency polygon, beanplot, shifted histograms).  There is some general advice to follow such as histograms being poor for small data sets, dotplots being poor for large data sets, histograms being poor for identifying outlier cut-offs, boxplots being good for outliers but obscuring multimodality.  Conseqently, it is important to draw a variety of plots.  Moreover, it is important to adjust parameters within plots (i.e. binwidth, axis transformation for skewed data) to get a comprehensive picture of the variable of concern.
+
+Next, we'll assess how we can gain insight into distributions of categorical variables.
 
 # Visualizing Categorical Variables
+
+A categorical variable is a variable that can take on one of a limited, and usually fixed, number of possible values, assigning each individual or other unit of observation to a particular group or nominal category on the basis of some qualitative property (i.e. gender, grade, manufacturer). There are a few different plots that can effectively communicate categorical variables but they all focus on a common feature: either the count or the proportion of each category observed in the variable.
 
 - bar/proportion charts
 - Lollipop chart
