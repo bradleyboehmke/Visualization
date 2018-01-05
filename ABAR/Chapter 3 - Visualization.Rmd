@@ -105,7 +105,7 @@ Let's take a closer look at the second two insights.  First, we'll consider the 
 
 If you really want to look at normality, then Q-Q plots are a great visual to assess (Fig xx). This graph plots the cumulative values we have in our data against the cumulative probability of a particular distribution (the default is a normal distribution). In essence, this plot compares the actual value against the expected value that the score should have in a normal distribution. If the data are normally distributed the plot will display a straight (or nearly straight) line. If the data deviates from normality then the line will display strong curvature or "snaking."  These plots illustrate how much the untransformed variable deviates from normality whereas the log transformed values align much closer to a normal distribution.
 
-```{r qqplot, fig.height=3, fig.width=6}
+```{r qqplot, fig.height=3, fig.width=7}
 par(mfrow = c(1, 2))
 
 # non-log transformed
@@ -205,11 +205,120 @@ Next, we'll assess how we can gain insight into distributions of categorical var
 
 # Visualizing Categorical Variables
 
-A categorical variable is a variable that can take on one of a limited, and usually fixed, number of possible values, assigning each individual or other unit of observation to a particular group or nominal category on the basis of some qualitative property (i.e. gender, grade, manufacturer). There are a few different plots that can effectively communicate categorical variables but they all focus on a common feature: either the count or the proportion of each category observed in the variable.
+A categorical variable is a variable that can take on one of a limited, and usually fixed, number of possible values, assigning each individual or other unit of observation to a particular group or nominal category on the basis of some qualitative property (i.e. gender, grade, manufacturer). There are a few different plots that can effectively communicate features of categorical variables.  Features we are generally interested in include:
 
-- bar/proportion charts
-- Lollipop chart
-- Cleveland dot plot
+- Count of each category
+- Proportion of each category
+- Imbalanced categories
+- Mislabeled categories
+
+Bar charts are one of the most commonly used data visualizations for categorical variables. Bar charts display the levels of a categorical variable of interest (typically) along the x-axis and the length of the bar illustrates the value along the y-axis. Consequently, the length of the bar is the primary visual cue in a bar chart and in a univariate visualization this length represents counts of cases in that particular level.
+
+If we look at the general zoning classification for each property sold in our `ames` dataset we see that the majority of all properties fall within one category. Here, `geom_bar` simply counts up all observations for each zoning level.
+
+```{r bar1, fig.width=6, fig.height=4}
+ggplot(ames, aes(MS_Zoning)) +
+  geom_bar()
+```
+
+Here, `MS_Zoning` represents a nominal categorical variable where there is no logical ordering of the labels; they simply represent mutually exclusive levels within our variable.  To get better clarity of nominal variables we can make some refinements.  Here I use `dplyr::count` to count the observations in each level prior to plotting.  In the second plot I use `mutate` to compute the percent that each level makes up of all observations.  I then feed these summarized data into `ggplot` where I can `reorder` the `MS_Zoning` variable from most frequent to least and then apply `coord_flip` to rotate the plot and make it easier to read the level categories.  Also, notice that now I feeding an x (`MS_Zoning`) and y (`n` in the left plot and `pct` in the right plot) arguments so I apply `geom_col` rather than `geom_bar`.
+
+```{r bar2, fig.width=9, fig.height=3}
+# total count
+p1 <- ames %>% 
+  count(MS_Zoning) %>%
+  ggplot(aes(reorder(MS_Zoning, n), n)) +
+  geom_col() +
+  coord_flip() +
+  ggtitle("Total count")
+
+# percent of whole
+p2 <- ames %>% 
+  count(MS_Zoning) %>%
+  mutate(pct = n / sum(n)) %>%
+  ggplot(aes(reorder(MS_Zoning, pct), pct)) +
+  geom_col() +
+  coord_flip() +
+  ggtitle("Percent of whole")
+
+gridExtra::grid.arrange(p1, p2, nrow = 1)
+```
+
+Now we can see that properties zoned as residential low density make up nearly 80% of all observations . We also see that properties zoned as aggricultural (`A_agr`), industrial (`I_all`), commercial (`C_all`), and residential high density make up a very small amount of observations.  In fact, below we see that these imbalanced category levels each make up less than 1\% of all observations.  
+
+```{r}
+ames %>% 
+  count(MS_Zoning) %>%
+  mutate(pct = n / sum(n)) %>%
+  arrange(pct)
+```
+
+This imbalanced nature can cause problems in future analytic models so it may make sense to combine these infrequent levels into an "other" category. An easy way to do that is to use `fct_lump`.[^factors]  Here we use `n = 2` to retain the top 2 levels in our variable and condense the remaining into an "other" category.  You can see that this combined category still represents less than 10% of all observations.
+
+```{r bar3, fig.width=6, fig.height=3}
+ames %>% 
+  mutate(MS_Zoning = fct_lump(MS_Zoning, n = 2)) %>% 
+  count(MS_Zoning) %>%
+  mutate(pct = n / sum(n)) %>%
+  ggplot(aes(reorder(MS_Zoning, pct), pct)) +
+  geom_col() +
+  coord_flip()
+```
+
+Basic bar charts such as these are great when the number of category levels is smaller.  However, as the number of levels increase the thick nature of the bar can be distracting.  Cleveland dot plots and lollipop charts are useful for assessing the frequency or proportion of many levels while minizing the amount of ink on the graphic.
+
+For example, if we assess the frequencies and proportions of home sales by  the 38 different neighborhoods a dotplot simplifies the chart.
+
+```{r dot, fig.height=6, fig.width=7}
+ames %>%  
+  count(Neighborhood) %>%
+  mutate(pct = n / sum(n)) %>%
+  ggplot(aes(pct, reorder(Neighborhood, pct))) +
+  geom_point()
+```
+
+Similar to the Cleveland dot plot, a lollipop chart minimizes the visual ink but uses a line to draw the readers attention to the specific x-axis value achieved by each category. In the lollipop chart we use `geom_segment` to plot the lines and we explicitly state that we want the lines to start at `x = 0` and extend to the neighborhood value with `xend = pct`. We simply need to include `y = neighborhood` and `yend = neighborhood` to tell R the lines are horizontally attached to each neighborhood.
+
+```{r dot1, fig.height=6, fig.width=7}
+ames %>%  
+  count(Neighborhood) %>%
+  mutate(pct = n / sum(n)) %>%
+  ggplot(aes(pct, reorder(Neighborhood, pct))) +
+  geom_point() +
+  geom_segment(aes(x = 0, xend = pct, y = Neighborhood, yend = Neighborhood), size = .15)
+```
+
+
+Sometimes we have categorical data that have natural, ordered categories.  These types of categorical variables can be ordinal or interval.  An ordinal variable is one in which the order of the values can be important but the differences between each one is not really known.  For example, our `ames` data categorizes the quality of kitchens into five buckets and these buckets have a natural order that is not captured with a regular bar chart.
+
+```{r ord1, fig.height=3, fig.width=5}
+ggplot(ames, aes(Kitchen_Qual)) + 
+  geom_bar()
+```
+
+Here, rather than order by frequency it may be important to order the bars by the natural order of the quality lables:  Poor, Fair, Typical, Good, Excellent.  This can provide better insight into where most observations fall within this spectrum of quality.  To do this we reorder the factor levels with `fct_relevel` and now its easier to see that most homes have average to slightly above average quality kitchens.
+
+```{r ord2, fig.height=3, fig.width=5}
+ames %>%
+  mutate(Kitchen_Qual = fct_relevel(Kitchen_Qual, "Poor", "Fair", "Typical", "Good")) %>%
+  ggplot(aes(Kitchen_Qual)) + 
+  geom_bar()
+```
+
+We may also have a categorical variable that has set intervals and may even be identified by integer values.  For example, our data identifies the month each home was sold but uses integer values to represent the months.  In this case we do not need to reorder our factor levels but we should ensure we visualize these as discrete factor levels (note how I apply `factor(Mo_Sold)` within ggplot) so that the home sale counts are appropriately bucketed into each month.  
+
+```{r int1, fig.width=7, fig.height=5}
+p1 <- ggplot(ames, aes(Mo_Sold)) + 
+  geom_bar()
+
+p2 <- ggplot(ames, aes(factor(Mo_Sold))) + 
+  geom_bar()
+
+gridExtra::grid.arrange(p1, p2, nrow = 2)
+```
+
+
+
 
 
 # Visualizing Relationships and Associations for a Continuous Response
@@ -234,4 +343,4 @@ A categorical variable is a variable that can take on one of a limited, and usua
 [^baseRhist]: We could also use `hist(ames$Sale_Price)` to produce a histogram with base R graphics.
 [^bins]: These are approximates because the binning will round to whole numbers (12,800 rather than 12,370.)
 [^transf]: Two things to note here. 1. If you want to change the binwidth you either need to feed a log tranformed number to binwidth or, as I did, increase the bins by using `bins = 100`. 2. If you have values of zero in your variable try `scale_x_continuous(trans = "log1p"), which adds 1 prior to the log transformation.
-
+[^factors]: A great resource to learn more about which you can learn more about managing factors is R for Data Science, Ch. 15.
