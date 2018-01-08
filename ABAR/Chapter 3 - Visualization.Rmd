@@ -13,6 +13,7 @@ Regardless, visual data exploration is about investigating the characteristics o
 ```{r packages, message=FALSE, warning=FALSE}
 library(tidyverse)
 library(caret)
+library(GGally)
 ```
 
 ```{r data, message=FALSE, warning=FALSE}
@@ -385,44 +386,109 @@ p2 <- ggplot(ames, aes(x = Gr_Liv_Area, y = Sale_Price)) +
 gridExtra::grid.arrange(p1, p2, nrow = 1)
 ```
 
-We can...
+Scatter plots can also signal distinct clustering or gaps.  For example, if we plot `Sale_Price` versus `Garage_Area` (left) we see a couple areas of concentrated points.  By incorporating a density plot (middle) we can draw attention to the centers of these clusters which appears to be located at homes with zero garage square footage and homes with just over 250 square feet and just under 500 square feet of garage area. We can also change our plot to a hexbin plot, that replaces bunches of points with a larger hexagonal symbol. This provides us with a heatmap-like plot to signal highly concentrated regions.  It also does a better job identifying gaps in our data where no observations exist.
 
 ```{r density_plot, fig.width=8, fig.height=3}
 p1 <- ggplot(ames, aes(x = Garage_Area, y = Sale_Price)) + 
-  geom_point(alpha = .2) +
-  scale_y_log10() + 
-  scale_x_log10()
+  geom_point(alpha = .2)
 
 p2 <- ggplot(ames, aes(x = Garage_Area, y = Sale_Price)) + 
   geom_point(alpha = .2) + 
-  geom_density2d() +
-  scale_y_log10() + 
-  scale_x_log10()
+  geom_density2d()
 
-gridExtra::grid.arrange(p1, p2, nrow = 1)
+p3 <- ggplot(ames, aes(x = Garage_Area, y = Sale_Price)) + 
+  geom_hex(bins = 50, show.legend = FALSE)
+
+gridExtra::grid.arrange(p1, p2, p3, nrow = 1)
 ```
 
+When assessing a continuous variable against a categorical variable a stip plot will form.  Here we assess the `Sale_Price` to the number of above ground bedrooms (`Bedroom_AbvGr`).  Due to the size of this data set, the top left strip plot has a lot of overlaid data points.  We can use `geom_jitter` to add a little variation to our plot (top right), which allows us to see where heavier concentrations of points exist. Alternatively, we can use boxplots and violin plots to compare the distributions of `Sale_Price` to `Bedroom_AbvGr`.  Each plot provides different insights to the different features (i.e. outliers, clustering, median values).
 
 
-```{r int_scatter, fig.width=8, fig.height=3}
-p1 <- ggplot(ames, aes(x = Bedroom_AbvGr, y = Sale_Price)) +
+```{r int_scatter, fig.width=7, fig.height=5}
+p1 <- ggplot(ames, aes(x = factor(Bedroom_AbvGr), y = Sale_Price)) +
   geom_point(alpha = .3)
 
-p2 <- ggplot(ames, aes(x = Bedroom_AbvGr, y = Sale_Price)) +
+p2 <- ggplot(ames, aes(x = factor(Bedroom_AbvGr), y = Sale_Price)) +
   geom_jitter(alpha = .5, width = .2)
 
 p3 <- ggplot(ames, aes(x = factor(Bedroom_AbvGr), y = Sale_Price)) +
   geom_boxplot()
 
-gridExtra::grid.arrange(p1, p2, p3, nrow = 1)
+p4 <- ggplot(ames, aes(x = factor(Bedroom_AbvGr), y = Sale_Price)) +
+  geom_violin()
+
+gridExtra::grid.arrange(p1, p2, p3, p4, nrow = 2)
+```
+
+An alternative approach to view the distribution of a continuous variable across multiple categories includes overlaying distribution plots.  For example, we could assess the `Sale_Price` of homes across the overall quality of homes.  We can do this with a frequency polygon (left), which display the outline of a histogram. However, since some quality levels have very low counts it is tough to see the distribution of costs within each category.  A better approach is to overlay density plots which allows us to see how each quality level's distribution differs from one another. 
+
+```{r, fig.width=8, fig.height=5}
+p1 <- ggplot(ames, aes(x = Sale_Price, color = Overall_Qual)) +
+  geom_freqpoly() +
+  scale_x_log10(breaks = c(50, 150, 400, 750) * 1000, labels = scales::dollar)
+  
+p2 <- ggplot(ames, aes(x = Sale_Price, color = Overall_Qual, fill = Overall_Qual)) +
+  geom_density(alpha = .15) +
+  scale_x_log10(breaks = c(50, 150, 400, 750) * 1000, labels = scales::dollar)
+
+gridExtra::grid.arrange(p1, p2, nrow = 2)
+```
+
+When there are many levels in a categorical variable, overlaid plots become difficult to decipher.  Rather than overlay plots, we can also use small multiples to compare the distribution of a continuous variable. Joyplots provide a form of small multiples by partially overlapping distribution plots. They can be quite useful for visualizing changes in continuous distributions over discrete variable levels.  In this example I use the `ggjoy` package which provides an add-on `geom_joy` for ggplot.  Now we get a much clearer picture how the sales price differs for each quality level.
+
+```{r joyplot, fig.width=7, fig.height=4}
+ggplot(ames, aes(x = Sale_Price, y = Overall_Qual)) + 
+  ggjoy::geom_joy() +
+  scale_x_continuous(labels = scales::dollar)
+```
+
+In most analyses, data are usually multivariate by nature, and the analytics are designed to capture and measure multivariate relationships.  Visual exploration should there fore also incorporate this important aspect.  We can extend these basic principles and add in additional features to assess multidimensional relationships.  One approach is to add additional variables with features such as color, shape, or size.  For example, here we compare the sales price to above ground square footage of homes with and without central air conditioning.  We can see that there are far more homes with central air and that those homes without central air tend to have less square footage and sell for lower sales prices.
+
+```{r multidim1, fig.width=6, fig.height=5}
+ggplot(ames, aes(x = Gr_Liv_Area, y = Sale_Price, color = Central_Air, shape = Central_Air)) +
+  geom_point(alpha = .3) +
+  scale_x_log10() +
+  scale_y_log10()
+```
+
+However, as before, when there are many levels in a categorical variable it becomes hard to compare differences by only incorporating color or shape features.  An alternative is to create small multiples. Here we compare the relationship between sales price and above ground square footage; however, we assess how this relationship may differ across the different house styles (i.e. one story, two story, etc.).
+
+```{r smallmulti, fig.width=8, fig.height=5}
+ggplot(ames, aes(x = Gr_Liv_Area, y = Sale_Price)) +
+  geom_point(alpha = .3) +
+  scale_x_log10() +
+  scale_y_log10(labels = scales::dollar) +
+  facet_wrap(~ House_Style, nrow = 2)
+
+```
+
+We can start to add several of the features discussed in this section to highlight mutlivariate features.  For example, here we assess the relationship between sales price and above ground square footable for homes with and without central air conditioning and across the different housing styles.  For each house style and central air category we can see where the values are clustered and how the linear relationship changes.  For all home styles, houses with central air have a higher selling price with a steeper slope than those without central air.  Also, those plots without density markings and linear lines for the no central air category (red) tell us that there are no more than one observation in these groups; so this identifies gaps across multivariate categories of interest.
+
+```{r multivar1, fig.width=8, fig.height=5}
+ggplot(ames, aes(x = Gr_Liv_Area, y = Sale_Price, color = Central_Air, shape = Central_Air)) +
+  geom_point(alpha = .3) +
+  geom_density2d(alpha = .5) +
+  geom_smooth(method = "lm", se = FALSE) +
+  scale_x_log10() +
+  scale_y_log10(labels = scales::dollar) +
+  facet_wrap(~ House_Style, nrow = 2) +
+  ggtitle("Sale Price vs. Above Ground Sq.Ft",
+          subtitle = "How does central air and house style influence this relationship?")
+
 ```
 
 
+Parallel coordinate plots (PCP) are also a great way to visualize continuous variables across multiple variables. In these plots, a vertical axis is drawn for each variable.  Then each observation is represented by drawing a line that connects its values on the different axes, thereby creating a multivariate profile.  To create a PCP, we can use `ggparcoord` from the `GGally` package.  By default, `ggparcoord` will standardize the variables based on a Z-score distribution; however, in this example I center scale the variables.  One benefit of of a PCP is that you can visualize your observations across continuous and categorical variables.  In this example I include `Overall_Qual` which is an ordered factor with levels "Very Poor", "Poor", "Fair", ..., "Excellent", "Very Excellent" having values of 1-10.  
 
+```{r parallel1, fig.width=8, fig.height=5}
+variables <- c("Sale_Price", "Year_Built", "Year_Remod_Add", "Overall_Qual")
 
-- scatter plots \& density plots
-- Facetted histograms \& joy plots
-- parallel coord plots
+ames %>%
+  select(variables) %>%
+  ggparcoord(alpha = .05, scale = "center")
+```
+
 
 
 # Visualizing Relationships and Associations for a Categorical Response
