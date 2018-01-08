@@ -318,10 +318,107 @@ gridExtra::grid.arrange(p1, p2, nrow = 2)
 ```
 
 
+Bar charts can also illustrate how our missing values are disbursed across categorical variables.  Using the `MASS::survey` data (since our `ames` data does not have any missing data) we can make small multiples (more on this in the next section) using `facet_wrap` to visualize the `NA`s. 
 
+```{r missing1, fig.height=4, fig.width=8}
+MASS::survey %>%
+  select(Sex, Exer, Smoke, Fold, Clap, M.I) %>%
+  gather(var, value, Sex:M.I) %>%
+  ggplot(aes(value)) +
+  geom_bar() +
+  facet_wrap(~ var, scales = "free")
+```
 
+Or in some cases observations are not labeled correctly.  If we look at the `Embarked` variable in the `titanic` package we see that the levels are labeled as C, Q, and S; however, there are two cases that have no label (these values are coded as `""` in the actual data set).  These are missing values that are just not coded as `NA`s.  For modeling purposes we would likely recode these as either `NA`s or impute them as one of the other three levels (C, Q, or S).
+
+```{r mislabeled, fig.height=3, fig.width=4}
+ggplot(titanic::titanic_train, aes(Embarked)) +
+  geom_bar()
+```
+
+Bar charts and their cousins are a simple form of visual display, yet they can provide much information about our categorical variables.  Whether viewing nominal, ordinal, or interval data we can make minor adjustments in our bar charts to highlight the important features of our variables.
 
 # Visualizing Relationships and Associations for a Continuous Response
+
+Having a solid understanding of univariate distributions is important; however, most analyses want to take the next step understand associations and relationships across different variables. Features we are generally interested in include:
+
+- Associations
+- Outliers
+- Clusters
+- Gaps
+- Barriers
+- Change points
+
+
+One of the most popular plots to assess association is the scatter plot.  The scatter plot helps us to see multiple features between two continuous variables.  Here we look the relationship between `Sale_Price` and total above ground square footage (`Gr_Liv_Area`). A few features that pop out from this plot includes:
+
+- Associations: There is a positive relationship between these two variables.  As total above ground square footage increases the sale price also increases.
+- Outliers: Several outliers appear in multiple directions.  Two outliers appear at the top of the chart suggesting these are larger than normal homes that sold for very high prices.  We also see three outliers at the far right of the chart suggesting these homes have very large square footage but sold for average sale prices.
+- Clusters: Give the large number of points there is a lot of overplotting, which is why I incorporated `alpha = .3` to increase transparency.  This allows us to see the clustering of data points in the center of the variable relationship.
+- Barriers: The outer limits of our point clustering shows us that there are limitations on the sale price for given ranges of square footage.  For example, homes with less than 1,000 square feet above ground appear to have a price ceiling of \$200,000 or less.
+
+```{r}
+ggplot(ames, aes(x = Gr_Liv_Area, y = Sale_Price)) +
+  geom_point(alpha = .3)
+```
+
+This relationship appears to be fairly linear but it is unclear. We can add trend lines to assess the linearity.  In the below plot we add a linear line with `geom_smooth(method = "lm")` and then we add a non-linear line (the second `geom_smooth` with a specified `method` adds uses a generalized additive model).  This allows us to assess how non-linear a relationship may be.  Our new plot shows that for homes with less than 2,250 square feet the relationship is fairly linear; however, beyond 2,250 square feet we see strong deviations from linearity.
+
+Also, note the funneling in the left scatter plot.  This is called heteroskedasticity (non-constant variance) and this can cause concerns with certain future modeling approaches (i.e. forms of linear regression).  We can assess if transforming our variables can alleviate this concern by adding `scale_?_log10`.  The right plot shows that transforming our variables makes our variability across the plot more constant.  We see that for the majority of the plot the relationship is now linear with the exception of the two ends where we see the non-linear line being pulled down.  This suggests that there are some influential observations with low and high square footage that are pulling the expected sale price down.  
+
+
+```{r dbl_scatter, fig.width=8, fig.height=4}
+p1 <- ggplot(ames, aes(x = Gr_Liv_Area, y = Sale_Price)) +
+  geom_point(alpha = .3) +
+  geom_smooth(method = "lm", se = FALSE, color = "red", lty = "dashed") +
+  geom_smooth(se = FALSE, lty = "dashed") +
+  ggtitle("Non-transformed variables")
+
+p2 <- ggplot(ames, aes(x = Gr_Liv_Area, y = Sale_Price)) +
+  geom_point(alpha = .3) +
+  geom_smooth(method = "lm", se = FALSE, color = "red", lty = "dashed") +
+  geom_smooth(se = FALSE, lty = "dashed") +
+  scale_x_log10() +
+  scale_y_log10() +
+  ggtitle("log-transformed variables")
+
+gridExtra::grid.arrange(p1, p2, nrow = 1)
+```
+
+We can...
+
+```{r density_plot, fig.width=8, fig.height=3}
+p1 <- ggplot(ames, aes(x = Garage_Area, y = Sale_Price)) + 
+  geom_point(alpha = .2) +
+  scale_y_log10() + 
+  scale_x_log10()
+
+p2 <- ggplot(ames, aes(x = Garage_Area, y = Sale_Price)) + 
+  geom_point(alpha = .2) + 
+  geom_density2d() +
+  scale_y_log10() + 
+  scale_x_log10()
+
+gridExtra::grid.arrange(p1, p2, nrow = 1)
+```
+
+
+
+```{r int_scatter, fig.width=8, fig.height=3}
+p1 <- ggplot(ames, aes(x = Bedroom_AbvGr, y = Sale_Price)) +
+  geom_point(alpha = .3)
+
+p2 <- ggplot(ames, aes(x = Bedroom_AbvGr, y = Sale_Price)) +
+  geom_jitter(alpha = .5, width = .2)
+
+p3 <- ggplot(ames, aes(x = factor(Bedroom_AbvGr), y = Sale_Price)) +
+  geom_boxplot()
+
+gridExtra::grid.arrange(p1, p2, p3, nrow = 1)
+```
+
+
+
 
 - scatter plots \& density plots
 - Facetted histograms \& joy plots
