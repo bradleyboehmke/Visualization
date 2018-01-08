@@ -459,7 +459,8 @@ ggplot(ames, aes(x = Gr_Liv_Area, y = Sale_Price)) +
   geom_point(alpha = .3) +
   scale_x_log10() +
   scale_y_log10(labels = scales::dollar) +
-  facet_wrap(~ House_Style, nrow = 2)
+  facet_wrap(~ House_Style, nrow = 2) +
+  theme_bw()
 
 ```
 
@@ -474,7 +475,8 @@ ggplot(ames, aes(x = Gr_Liv_Area, y = Sale_Price, color = Central_Air, shape = C
   scale_y_log10(labels = scales::dollar) +
   facet_wrap(~ House_Style, nrow = 2) +
   ggtitle("Sale Price vs. Above Ground Sq.Ft",
-          subtitle = "How does central air and house style influence this relationship?")
+          subtitle = "How does central air and house style influence this relationship?") +
+  theme_bw()
 
 ```
 
