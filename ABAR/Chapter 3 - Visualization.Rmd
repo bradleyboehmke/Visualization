@@ -10,6 +10,10 @@ Visual data exploration is a mandatory intial step whether or not more formal an
 Regardless, visual data exploration is about investigating the characteristics of your data set.  To do this, we typically create numerous plots in an interactive fashion.  This chapter will show you how to create plots that answer some of the fundamental questions we typically have of our data.  
 
 
+# Prerequisites
+
+In this chapter we’ll illustrate the key ideas by primarily focusing on data from the `AmesHousing` package.  We'll use `tidyverse` to provide some basic data manipulation capabilities along with `ggplot2` for plotting.  We also demonstrate some useful functions from a few other packages throughout the chapter.
+
 ```{r packages, message=FALSE, warning=FALSE}
 library(tidyverse)
 library(caret)
@@ -17,7 +21,7 @@ library(GGally)
 ```
 
 ```{r data, message=FALSE, warning=FALSE}
-(ames <- AmesHousing::make_ames())
+ames <- AmesHousing::make_ames()
 ```
 
 ```{r setup, message=FALSE, warning=FALSE, echo=FALSE}
@@ -147,9 +151,9 @@ p2 <- ggplot(ames, aes("var", Sale_Price)) +
 gridExtra::grid.arrange(p1, p2, ncol = 2)
 ```
 
-The boxplot starts to answer the question of what potential outliers exist in your data. Outliers in data can distort predictions and affect their accuracy. Consequently, its important to understand if outliers are present and, if so, which observations are considered outliers. Boxplots provide a visual assessment of potential outliers while the `outliers` package provides a number of useful functions to systematically extract these outliers. The most useful function is the `scores` function, which computes normal, t, chi-squared, IQR and MAD scores of the given data which you can use to find observation(s) that lie beyond a given value.
+The boxplot starts to answer the question of what potential outliers exist in our data. Outliers in data can distort predictions and affect their accuracy. Consequently, its important to understand if outliers are present and, if so, which observations are considered outliers. Boxplots provide a visual assessment of potential outliers while the `outliers` package provides a number of useful functions to systematically extract these outliers. The most useful function is the `scores` function, which computes normal, t, chi-squared, IQR and MAD scores of the given data which you can use to find observation(s) that lie beyond a given value.
 
-Here, I use the `outliers::score` function to extract those observations beyond the whiskers in our boxplot and then use a stem and leaf plot to assess them.  A stem and leaf plot is a special table where each data value is split into a "stem" (the first digit or digits) and a "leaf" (usually the second digit).  Since the decimal point is located 5 digits to the right of the "|"" the last stem of "7" and and first leaf of "5" means an outlier exists at around \$750,000.  The last stem of "7" and and second leaf of "6" means an outlier exists at around \$760,000.  This is a concise way to see approximately where our outliers are.  In fact, I can now see that I have 28 lower end outliers ranging from \$10,000-\$60,000 and 32 upper end outliers ranging from \$450,000-\$760,000.
+Here, I use the `outliers::score` function to extract those observations beyond the whiskers in our boxplot and then use a stem-and-leaf plot to assess them.  A stem-and-leaf plot is a special table where each data value is split into a "stem" (the first digit or digits) and a "leaf" (usually the second digit).  Since the decimal point is located 5 digits to the right of the "|"" the last stem of "7" and and first leaf of "5" means an outlier exists at around \$750,000.  The last stem of "7" and and second leaf of "6" means an outlier exists at around \$760,000.  This is a concise way to see approximately where our outliers are.  In fact, I can now see that I have 28 lower end outliers ranging from \$10,000-\$60,000 and 32 upper end outliers ranging from \$450,000-\$760,000.
 
 ```{r stem}
 outliers <- outliers::scores(log(ames$Sale_Price), type = "iqr", lim = 1.5)
@@ -183,7 +187,6 @@ You may also be interested to see if there are any systematic groupings with how
 ```{r indexplot, fig.align='center', fig.width=7, fig.height=3}
 plot(ames$Sale_Price)
 ```
-
 
 
 There are also a couple plots that can come in handy when dealing with smaller data sets.  For example, the dotplot below provides more clarity than the histogram for viewing the distribution of `mpg` in the built-in `mtcars` dataset with only 32 observations.  An alternative to this would be using a strip chart (see `stripchart`). 
@@ -341,7 +344,7 @@ Bar charts and their cousins are a simple form of visual display, yet they can p
 
 # Visualizing Relationships and Associations for a Continuous Response
 
-Having a solid understanding of univariate distributions is important; however, most analyses want to take the next step understand associations and relationships across different variables. Features we are generally interested in include:
+Having a solid understanding of univariate distributions is important; however, most analyses want to take the next step to understand associations and relationships across different variables. Features we are generally interested in include:
 
 - Associations
 - Outliers
@@ -351,19 +354,19 @@ Having a solid understanding of univariate distributions is important; however, 
 - Change points
 
 
-One of the most popular plots to assess association is the scatter plot.  The scatter plot helps us to see multiple features between two continuous variables.  Here we look the relationship between `Sale_Price` and total above ground square footage (`Gr_Liv_Area`). A few features that pop out from this plot includes:
+One of the most popular plots to assess association is the scatter plot.  The scatter plot helps us to see multiple features between two continuous variables.  Here we look at the relationship between `Sale_Price` and total above ground square footage (`Gr_Liv_Area`). A few features that pop out from this plot includes:
 
 - Associations: There is a positive relationship between these two variables.  As total above ground square footage increases the sale price also increases.
 - Outliers: Several outliers appear in multiple directions.  Two outliers appear at the top of the chart suggesting these are larger than normal homes that sold for very high prices.  We also see three outliers at the far right of the chart suggesting these homes have very large square footage but sold for average sale prices.
 - Clusters: Give the large number of points there is a lot of overplotting, which is why I incorporated `alpha = .3` to increase transparency.  This allows us to see the clustering of data points in the center of the variable relationship.
 - Barriers: The outer limits of our point clustering shows us that there are limitations on the sale price for given ranges of square footage.  For example, homes with less than 1,000 square feet above ground appear to have a price ceiling of \$200,000 or less.
 
-```{r}
+```{r scatter1,  fig.height=3, fig.width=4}
 ggplot(ames, aes(x = Gr_Liv_Area, y = Sale_Price)) +
   geom_point(alpha = .3)
 ```
 
-This relationship appears to be fairly linear but it is unclear. We can add trend lines to assess the linearity.  In the below plot we add a linear line with `geom_smooth(method = "lm")` and then we add a non-linear line (the second `geom_smooth` with a specified `method` adds uses a generalized additive model).  This allows us to assess how non-linear a relationship may be.  Our new plot shows that for homes with less than 2,250 square feet the relationship is fairly linear; however, beyond 2,250 square feet we see strong deviations from linearity.
+This relationship appears to be fairly linear but it is unclear. We can add trend lines to assess the linearity.  In the below plot we add a linear line with `geom_smooth(method = "lm")` (note the `method = "lm"` means to add a linear model line) and then we add a non-linear line (the second `geom_smooth` without a specified `method` adds uses a generalized additive model).  This allows us to assess how non-linear a relationship may be.  Our new plot shows that for homes with less than 2,250 square feet the relationship is fairly linear; however, beyond 2,250 square feet we see strong deviations from linearity.
 
 Also, note the funneling in the left scatter plot.  This is called heteroskedasticity (non-constant variance) and this can cause concerns with certain future modeling approaches (i.e. forms of linear regression).  We can assess if transforming our variables can alleviate this concern by adding `scale_?_log10`.  The right plot shows that transforming our variables makes our variability across the plot more constant.  We see that for the majority of the plot the relationship is now linear with the exception of the two ends where we see the non-linear line being pulled down.  This suggests that there are some influential observations with low and high square footage that are pulling the expected sale price down.  
 
@@ -402,7 +405,7 @@ p3 <- ggplot(ames, aes(x = Garage_Area, y = Sale_Price)) +
 gridExtra::grid.arrange(p1, p2, p3, nrow = 1)
 ```
 
-When assessing a continuous variable against a categorical variable a stip plot will form.  Here we assess the `Sale_Price` to the number of above ground bedrooms (`Bedroom_AbvGr`).  Due to the size of this data set, the top left strip plot has a lot of overlaid data points.  We can use `geom_jitter` to add a little variation to our plot (top right), which allows us to see where heavier concentrations of points exist. Alternatively, we can use boxplots and violin plots to compare the distributions of `Sale_Price` to `Bedroom_AbvGr`.  Each plot provides different insights to the different features (i.e. outliers, clustering, median values).
+When using a scatter plot to assess a continuous variable against a categorical variable a stip plot will form.  Here we assess the `Sale_Price` to the number of above ground bedrooms (`Bedroom_AbvGr`).  Due to the size of this data set, the top left strip plot has a lot of overlaid data points.  We can use `geom_jitter` to add a little variation to our plot (top right), which allows us to see where heavier concentrations of points exist. Alternatively, we can use boxplots and violin plots to compare the distributions of `Sale_Price` to `Bedroom_AbvGr`.  Each plot provides different insights to the different features (i.e. outliers, clustering, median values).
 
 
 ```{r int_scatter, fig.width=7, fig.height=5}
@@ -443,16 +446,16 @@ ggplot(ames, aes(x = Sale_Price, y = Overall_Qual)) +
   scale_x_continuous(labels = scales::dollar)
 ```
 
-In most analyses, data are usually multivariate by nature, and the analytics are designed to capture and measure multivariate relationships.  Visual exploration should there fore also incorporate this important aspect.  We can extend these basic principles and add in additional features to assess multidimensional relationships.  One approach is to add additional variables with features such as color, shape, or size.  For example, here we compare the sales price to above ground square footage of homes with and without central air conditioning.  We can see that there are far more homes with central air and that those homes without central air tend to have less square footage and sell for lower sales prices.
+In most analyses, data are usually multivariate by nature, and the analytics are designed to capture and measure multivariate relationships.  Visual exploration should therefore also incorporate this important aspect.  We can extend these basic principles and add in additional features to assess multidimensional relationships.  One approach is to add additional variables with features such as color, shape, or size.  For example, here we compare the sales price to above ground square footage of homes with and without central air conditioning.  We can see that there are far more homes with central air and that those homes without central air tend to have less square footage and sell for lower sales prices.
 
-```{r multidim1, fig.width=6, fig.height=5}
+```{r multidim1, fig.width=4, fig.height=3}
 ggplot(ames, aes(x = Gr_Liv_Area, y = Sale_Price, color = Central_Air, shape = Central_Air)) +
   geom_point(alpha = .3) +
   scale_x_log10() +
   scale_y_log10()
 ```
 
-However, as before, when there are many levels in a categorical variable it becomes hard to compare differences by only incorporating color or shape features.  An alternative is to create small multiples. Here we compare the relationship between sales price and above ground square footage; however, we assess how this relationship may differ across the different house styles (i.e. one story, two story, etc.).
+However, as before, when there are many levels in a categorical variable it becomes hard to compare differences by only incorporating color or shape features.  An alternative is to create small multiples. Here we compare the relationship between sales price and above ground square footage and we assess how this relationship may differ across the different house styles (i.e. one story, two story, etc.).
 
 ```{r smallmulti, fig.width=8, fig.height=5}
 ggplot(ames, aes(x = Gr_Liv_Area, y = Sale_Price)) +
@@ -464,7 +467,7 @@ ggplot(ames, aes(x = Gr_Liv_Area, y = Sale_Price)) +
 
 ```
 
-We can start to add several of the features discussed in this section to highlight mutlivariate features.  For example, here we assess the relationship between sales price and above ground square footable for homes with and without central air conditioning and across the different housing styles.  For each house style and central air category we can see where the values are clustered and how the linear relationship changes.  For all home styles, houses with central air have a higher selling price with a steeper slope than those without central air.  Also, those plots without density markings and linear lines for the no central air category (red) tell us that there are no more than one observation in these groups; so this identifies gaps across multivariate categories of interest.
+We can start to add several of the features discussed in this chapter to highlight mutlivariate features.  For example, here we assess the relationship between sales price and above ground square footage for homes with and without central air conditioning and across the different housing styles.  For each house style and central air category we can see where the values are clustered and how the linear relationship changes.  For all home styles, houses with central air have a higher selling price with a steeper slope than those without central air.  Also, those plots without density markings and linear lines for the no central air category (red) tell us that there are no more than one observation in these groups; so this identifies gaps across multivariate categories of interest.
 
 ```{r multivar1, fig.width=8, fig.height=5}
 ggplot(ames, aes(x = Gr_Liv_Area, y = Sale_Price, color = Central_Air, shape = Central_Air)) +
@@ -481,9 +484,9 @@ ggplot(ames, aes(x = Gr_Liv_Area, y = Sale_Price, color = Central_Air, shape = C
 ```
 
 
-Parallel coordinate plots (PCP) are also a great way to visualize continuous variables across multiple variables. In these plots, a vertical axis is drawn for each variable.  Then each observation is represented by drawing a line that connects its values on the different axes, thereby creating a multivariate profile.  To create a PCP, we can use `ggparcoord` from the `GGally` package.  By default, `ggparcoord` will standardize the variables based on a Z-score distribution; however, in this example I center scale the variables.  One benefit of of a PCP is that you can visualize your observations across continuous and categorical variables.  In this example I include `Overall_Qual` which is an ordered factor with levels "Very Poor", "Poor", "Fair", ..., "Excellent", "Very Excellent" having values of 1-10.  
+Parallel coordinate plots (PCP) are also a great way to visualize continuous variables across multiple variables. In these plots, a vertical axis is drawn for each variable.  Then each observation is represented by drawing a line that connects its values on the different axes, thereby creating a multivariate profile.  To create a PCP, we can use `ggparcoord` from the `GGally` package.  By default, `ggparcoord` will standardize the variables based on a Z-score distribution; however, there are many options for scaling (see `?ggparcoord`).  One benefit of of a PCP is that you can visualize your observations across continuous and categorical variables.  In this example I include `Overall_Qual` which is an ordered factor with levels "Very Poor", "Poor", "Fair", ..., "Excellent", "Very Excellent" having values of 1-10.  When including a factor variable `ggparcoord` will use the factor integer levels for their value so it is important to appropriately order any factors you want to include.
 
-```{r parallel1, fig.width=8, fig.height=5}
+```{r parallel1, fig.width=7, fig.height=4}
 variables <- c("Sale_Price", "Year_Built", "Year_Remod_Add", "Overall_Qual")
 
 ames %>%
@@ -491,11 +494,29 @@ ames %>%
   ggparcoord(alpha = .05, scale = "center")
 ```
 
+The darker bands in the above plot illustrate several features.  The observations with higher sales prices tend to be built in more recent years, be remodeled in recent years and be categorized in the top half of the overall quality measures.  In contracts, homes with lower sales prices tend to be more out-dated (based on older built and remodel dates) and have lower quality ratings.  We also see some homes with exceptionally old build dates that have much newer remodel dates but still have just average quality ratings.
 
+We can make this more explicit by adding a new variable to indicate if a sale price is above average.  We can then tell `ggparcood` to group by this new variable.  Now we clearly see that above average sale prices are related to much newer homes.
+
+```{r parallel2, fig.width=7, fig.height=4}
+ames %>%
+  select(variables) %>%
+  mutate(Above_Avg = Sale_Price > mean(Sale_Price)) %>%
+  ggparcoord(
+    alpha = .05,
+    scale = "center",
+    columns = 1:4,
+    groupColumn = "Above_Avg"
+    )
+```
 
 # Visualizing Relationships and Associations for a Categorical Response
 
-- facetted bar charts
+One dimensional displays of categorical data were discussed in section 3.2.  However, similar to the last section, it is important to understand how a categorical response is associated with multiple variables. 
+
+As in the last section we can use faceting (`facet_wrap` and `facet_grid`) to produce small multiples and also visualize factors with PCPs.  Mosaic plots provide an alternative approach for multivariate categorical data.  Mosaic plots...
+
+
 - mosaic plot
 - heatmap
 
