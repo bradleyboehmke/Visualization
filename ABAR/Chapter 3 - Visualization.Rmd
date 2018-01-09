@@ -18,6 +18,7 @@ In this chapter we’ll illustrate the key ideas by primarily focusing on data f
 library(tidyverse)
 library(caret)
 library(GGally)
+library(treemap)
 ```
 
 ```{r data, message=FALSE, warning=FALSE}
@@ -29,7 +30,11 @@ theme_set(theme_minimal())
 knitr::opts_chunk$set(warning = FALSE, message = FALSE, collapse = TRUE, fig.align = 'center')
 ```
 
-# Visualizing Continuous Variables
+# Univariate Distributions
+
+Before moving on to more sophisticated visualizations that enable multidimensional investigation, it is important to be able to understand how an individual variable is distributed.  Visually understanding the distribution allows us to describe many features of a variable.
+
+## Continuous Variables
 
 A variable is continuous if it can take any of an infinite set of ordered values. There are several different plots that can effectively communicate the different features of continuous variables.  Features we are generally interested in include:
 
@@ -205,9 +210,8 @@ gridExtra::grid.arrange(p1, p2, nrow = 1)
 
 As demonstrated, several plots exist for examining univariate continuous variables.  Several exampes were provided here but still more exist (i.e. frequency polygon, beanplot, shifted histograms).  There is some general advice to follow such as histograms being poor for small data sets, dotplots being poor for large data sets, histograms being poor for identifying outlier cut-offs, boxplots being good for outliers but obscuring multimodality.  Conseqently, it is important to draw a variety of plots.  Moreover, it is important to adjust parameters within plots (i.e. binwidth, axis transformation for skewed data) to get a comprehensive picture of the variable of concern.
 
-Next, we'll assess how we can gain insight into distributions of categorical variables.
 
-# Visualizing Categorical Variables
+## Categorical Variables
 
 A categorical variable is a variable that can take on one of a limited, and usually fixed, number of possible values, assigning each individual or other unit of observation to a particular group or nominal category on the basis of some qualitative property (i.e. gender, grade, manufacturer). There are a few different plots that can effectively communicate features of categorical variables.  Features we are generally interested in include:
 
@@ -342,9 +346,9 @@ ggplot(titanic::titanic_train, aes(Embarked)) +
 
 Bar charts and their cousins are a simple form of visual display, yet they can provide much information about our categorical variables.  Whether viewing nominal, ordinal, or interval data we can make minor adjustments in our bar charts to highlight the important features of our variables.
 
-# Visualizing Relationships and Associations for a Continuous Response
+# Relationships and Associations
 
-Having a solid understanding of univariate distributions is important; however, most analyses want to take the next step to understand associations and relationships across different variables. Features we are generally interested in include:
+Having a solid understanding of univariate distributions is important; however, most analyses want to take the next step to understand associations and relationships between variables. Features we are generally interested in include:
 
 - Associations
 - Outliers
@@ -446,6 +450,40 @@ ggplot(ames, aes(x = Sale_Price, y = Overall_Qual)) +
   scale_x_continuous(labels = scales::dollar)
 ```
 
+It is important to understand how a categorical response is associated with multiple variables.  We can use faceting (`facet_wrap` and `facet_grid`) to produce small multiples of bar charts across the levels of 1 or more categorical variable. For example, here we assess the quality of kitchens for homes that sold above and below the mean sales price.  Not surprisingly we see homes above average sales price have higher quality kitchens.
+
+```{r facetw_bar, fig.height=3, fig.width=8}
+ames %>%
+  mutate(
+    Above_Avg = ifelse(Sale_Price > mean(Sale_Price), "Above", "Below"),
+    Kitchen_Qual = fct_relevel(Kitchen_Qual, "Poor", "Fair", "Typical", "Good")
+    ) %>%
+  ggplot(aes(Kitchen_Qual)) + 
+  geom_bar() +
+  facet_wrap(~ Above_Avg) +
+  theme_bw()
+```
+
+We can build onto this with `facet_grid` which allows us to create small multiples across two additional dimensions.  In this example we assess the quality of kitchens for homes that sold above and below the mean sales price by neighborhood.  This plot allows us to see gaps across the different categorical levels along with which category combinations are most frequent.
+
+```{r facetg_bar, fig.height=8, fig.width=8}
+ames %>%
+  mutate(
+    Above_Avg = ifelse(Sale_Price > mean(Sale_Price), "Above", "Below"),
+    Kitchen_Qual = fct_relevel(Kitchen_Qual, "Poor", "Fair", "Typical", "Good")
+    ) %>%
+  group_by(Neighborhood, Above_Avg, Kitchen_Qual) %>%
+  tally() %>%
+  mutate(pct = n / sum(n)) %>%
+  ggplot(aes(Kitchen_Qual, pct)) + 
+  geom_col() +
+  facet_grid(Neighborhood ~ Above_Avg) +
+  theme(strip.text.y = element_text(angle = 0, hjust = 0))
+```
+
+
+# Multivariate Relationships
+
 In most analyses, data are usually multivariate by nature, and the analytics are designed to capture and measure multivariate relationships.  Visual exploration should therefore also incorporate this important aspect.  We can extend these basic principles and add in additional features to assess multidimensional relationships.  One approach is to add additional variables with features such as color, shape, or size.  For example, here we compare the sales price to above ground square footage of homes with and without central air conditioning.  We can see that there are far more homes with central air and that those homes without central air tend to have less square footage and sell for lower sales prices.
 
 ```{r multidim1, fig.width=4, fig.height=3}
@@ -510,15 +548,11 @@ ames %>%
     )
 ```
 
-# Visualizing Relationships and Associations for a Categorical Response
 
-One dimensional displays of categorical data were discussed in section 3.2.  However, similar to the last section, it is important to understand how a categorical response is associated with multiple variables. 
-
-As in the last section we can use faceting (`facet_wrap` and `facet_grid`) to produce small multiples and also visualize factors with PCPs.  Mosaic plots provide an alternative approach for multivariate categorical data.  Mosaic plots are a graphical method for visualizing data from two or more qualitative variables. In this visual the graphics area is divided up into rectangles proportional in size to the counts of the combinations they represent.
+Mosaic plots are a graphical method for visualizing data from two or more qualitative variables. In this visual the graphics area is divided up into rectangles proportional in size to the counts of the combinations they represent.
 
 
-
-```{r}
+```{r mosaic, fig.height=6, fig.width=9}
 ames2 <- ames %>%
   mutate(
     Above_Avg = Sale_Price > mean(Sale_Price),
@@ -526,20 +560,73 @@ ames2 <- ames %>%
     Garage_Qual = abbreviate(Garage_Qual)
          )
 
-#mosaicplot(Above_Avg ~ Garage_Type, data = ames2, las = 1)
-#mosaicplot(Above_Avg ~ Garage_Type + Garage_Cars, data = ames2, las = 1)
-mosaicplot(Above_Avg ~ Garage_Type + Garage_Cars + Garage_Qual, data = ames2, las = 1)
-
+par(mfrow = c(1, 2))
+mosaicplot(Above_Avg ~ Garage_Type, data = ames2, las = 1)
+mosaicplot(Above_Avg ~ Garage_Type + Garage_Cars, data = ames2, las = 1)
 ```
 
+Treemaps are also a useful visualization aimed at assessing the hierarchical structure of data.  Treemaps are primarily used to assess a numeric value across multiple categories.  It can be useful to assess the counts or porportions of a categorical variable nested within other categorical variables.  For example, we can use a treemap to visualize the above right mosaic plot that illustrates the number of homes sold above and below average sales price with different garage characteristics.  We can see in the treemap that houses with above average prices tend to have attached 2 and 3-car garages.  Houses sold below average price have more attached 1-car garages and also have far more detached garages. 
 
-- treemap
-- heatmap
+```{r mosaic2, fig.height=5, fig.width=8}
+ames %>% 
+  mutate(Above_Below = ifelse(Sale_Price > mean(Sale_Price), "Above Avg", "Below Avg")) %>%
+  count(Garage_Type, Garage_Cars, Above_Below) %>%
+  treemap(
+    index = c("Above_Below", "Garage_Type", "Garage_Cars"),
+    vSize = "n"
+  )
+```
 
-# Visualizing Data Quality
+A heatmap is a graphical display of numerical data where color is used to denote the case value realtive to other values in the column.  Heatmaps can be extremely useful in identify clusters of strongly correlated values. We can select all numeric variables in our `ames` data set, compute the correlation matrix and visualize this matrix with a heatmap. Those locations with dark red represent correlations with smaller values while lighter colored cells represent larger values.  Looking at `Sale_Price` (3rd row from top) you can see that the smaller values are clustered to the left of the plot suggestion weaker linear relationships with variables such as `BsmtFin_Sf_1`, `Bsmt_Unf_SF`, `Longitude`, `Enclosed_Porch`, etc.  The larger correlations values for `Sale_Price` align with variables to the right of the plot such as `Garage_Cars`, `Garage_Area`, `First_Flr_SF`, etc.
 
-- Missingness
-- Outliers
+```{r heatmap, fig.height=5, fig.width=5}
+ames %>%
+  select_if(is.numeric) %>%
+  cor() %>%
+  heatmap()
+```
+
+A heatmap is a great way to assess the relationship across a large data set.  However, when you are dealing with a smaller data set (or subset), you may want to create a matrix plot to compare relationships across all variables. For example, here I select `Sale_Price` and all variables that contain "sf" (all square footage variables), I scale all variables, and then visualize the scatter plot and correlation values with `GGally::ggpairs`.
+
+```{r ggpairs, fig.width=8, fig.height=8}
+ames %>%
+  select(Sale_Price, contains("sf")) %>%
+  map_df(scale) %>%
+  ggpairs()
+```
+
+# Data Quality
+
+Graphical displays can also assist in summarizing certain data quality features.  In the previous sections we illustrated how we can identify outliers but missing data also represent an important characteristic of our data. This chapter has been using the processed version of the Ames housing data set.  However, if we use the raw data we see that there are 13,997 missing values.  It is important to understand how these missing values are dispersed acrossed a data set as that can determine if you need to eliminate a variable or if you can impute.
+
+```{r}
+sum(is.na(AmesHousing::ames_raw))
+```
+
+Heatmaps have a nice alternative use case for visualizing missing values across a data set. In this example `is.na(AmesHousing::ames_raw)` will return a Boolean (TRUE/FALSE) output indicating the location of missing values and by multiplying this value by 1 converts the output to 0/1 binary to be plotted.  All yellow locations in our heatmap represent missing values.  This allows us to see those variables where the majority of the observations have missing values (i.e. `Alley`, `Fireplace Qual`, `Pool QC`, `Fence`, and `Misc Feature`).  Due to their high frequency of missingness, these variables would likely need to be removed from future analytic approaches.  However, we can also spot other unique features of missingness.  For example, missing values appear to occur across all garage variables for the same observations.  
+
+```{r heatmap2, fig.height=5, fig.width=8}
+heatmap(1 * is.na(AmesHousing::ames_raw), Rowv = NA, Colv = NA)
+```
+
+If we dig a little deeper into these variables we would notice that `Garage Cars` and `Garage Area` all contain the value 0 for every observation where the other `Garage_xx` variables have missing values.  This is because in the raw Ames housing data set, they did not have an option to identify houses with no garages.  Therefore, all houses with no garage were identified by including nothing.  This would be opportunity to create a new categorical level ("None") for these garage variables.
+
+```{r}
+AmesHousing::ames_raw %>% 
+  filter(is.na(`Garage Type`)) %>% 
+  select(contains("garage"))
+```
+
+An alternative approach is to use `extracat::visna`, which allows us to visualize missing patters.  The columns represent the 82 variables and the rows the missing patterns. The cells for the variables with missing values in a pattern are drawn in blue. The variables and patterns have been ordered by numbers of missings on both rows and columns (`sort = "b"`). The bars beneath the columns show the proporations of missings by variable and the bars on the right show the relative frequencies of patterns.   
+
+```{r missing2, fig.height=7, fig.width=8}
+extracat::visna(AmesHousing::ames_raw, sort = "b")
+```
+
+Data can be missing for different reasons.  It could be that a value was not recorded, or that it was, but was obviously an error.  As in our case with the garage variables it could be because there was not an option to record the specific value observed so the default action was to not record any value.  Regardless, it is important to identify and understand how missing values are observed across a data set as they can provide insight into how to deal with these observations.
+
+# Exercises
+
 
 
 [^baseRhist]: We could also use `hist(ames$Sale_Price)` to produce a histogram with base R graphics.
