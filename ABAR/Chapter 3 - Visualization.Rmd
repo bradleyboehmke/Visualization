@@ -1,7 +1,10 @@
 ---
 title: "ABAR: Chapter 3"
-output: html_notebook
+output:
+  pdf_document:
+    keep_tex: true
 ---
+
 
 Data visualization is a critical tool in the data analysis process.  Visualization tasks can range from generating fundamental distribution plots to understanding the interplay of complex influential variables in machine learning algorithms.  In this chapter we focus on the use of visualization for initial *data exploration*. 
 
