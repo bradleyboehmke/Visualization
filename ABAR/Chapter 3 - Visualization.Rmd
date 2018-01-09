@@ -514,10 +514,26 @@ ames %>%
 
 One dimensional displays of categorical data were discussed in section 3.2.  However, similar to the last section, it is important to understand how a categorical response is associated with multiple variables. 
 
-As in the last section we can use faceting (`facet_wrap` and `facet_grid`) to produce small multiples and also visualize factors with PCPs.  Mosaic plots provide an alternative approach for multivariate categorical data.  Mosaic plots...
+As in the last section we can use faceting (`facet_wrap` and `facet_grid`) to produce small multiples and also visualize factors with PCPs.  Mosaic plots provide an alternative approach for multivariate categorical data.  Mosaic plots are a graphical method for visualizing data from two or more qualitative variables. In this visual the graphics area is divided up into rectangles proportional in size to the counts of the combinations they represent.
 
 
-- mosaic plot
+
+```{r}
+ames2 <- ames %>%
+  mutate(
+    Above_Avg = Sale_Price > mean(Sale_Price),
+    Garage_Type = abbreviate(Garage_Type),
+    Garage_Qual = abbreviate(Garage_Qual)
+         )
+
+#mosaicplot(Above_Avg ~ Garage_Type, data = ames2, las = 1)
+#mosaicplot(Above_Avg ~ Garage_Type + Garage_Cars, data = ames2, las = 1)
+mosaicplot(Above_Avg ~ Garage_Type + Garage_Cars + Garage_Qual, data = ames2, las = 1)
+
+```
+
+
+- treemap
 - heatmap
 
 # Visualizing Data Quality
