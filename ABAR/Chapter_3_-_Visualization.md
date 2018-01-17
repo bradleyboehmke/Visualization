@@ -1,9 +1,4 @@
----
-title: "ABAR: Chapter 3"
-output:
-  html_document:
-    keep_md: true
----
+# ABAR: Chapter 3
 
 
 Data visualization is a critical tool in the data analysis process.  Visualization tasks can range from generating fundamental distribution plots to understanding the interplay of complex influential variables in machine learning algorithms.  In this chapter we focus on the use of visualization for initial *data exploration*. 
@@ -554,12 +549,12 @@ gridExtra::grid.arrange(p1, p2, nrow = 2)
 
 <img src="Chapter_3_-_Visualization_files/figure-html/unnamed-chunk-3-1.png" style="display: block; margin: auto;" />
 
-When there are many levels in a categorical variable, overlaid plots become difficult to decipher.  Rather than overlay plots, we can also use small multiples to compare the distribution of a continuous variable. Joyplots provide a form of small multiples by partially overlapping distribution plots. They can be quite useful for visualizing changes in continuous distributions over discrete variable levels.  In this example I use the `ggjoy` package which provides an add-on `geom_joy` for ggplot.  Now we get a much clearer picture how the sales price differs for each quality level.
+When there are many levels in a categorical variable, overlaid plots become difficult to decipher.  Rather than overlay plots, we can also use small multiples to compare the distribution of a continuous variable. Ridge plots provide a form of small multiples by partially overlapping distribution plots. They can be quite useful for visualizing changes in continuous distributions over discrete variable levels.  In this example I use the `ggri` package which provides an add-on `geom_joy` for ggplot.  Now we get a much clearer picture how the sales price differs for each quality level.
 
 
 ```r
 ggplot(ames, aes(x = Sale_Price, y = Overall_Qual)) + 
-  ggjoy::geom_joy() +
+  ggridges::geom_density_ridges() +
   scale_x_continuous(labels = scales::dollar)
 ```
 
@@ -795,6 +790,7 @@ extracat::visna(AmesHousing::ames_raw, sort = "b")
 Data can be missing for different reasons.  It could be that a value was not recorded, or that it was, but was obviously an error.  As in our case with the garage variables it could be because there was not an option to record the specific value observed so the default action was to not record any value.  Regardless, it is important to identify and understand how missing values are observed across a data set as they can provide insight into how to deal with these observations.
 
 # Exercises
+
 
 
 
