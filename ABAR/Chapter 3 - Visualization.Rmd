@@ -412,7 +412,7 @@ p3 <- ggplot(ames, aes(x = Garage_Area, y = Sale_Price)) +
 gridExtra::grid.arrange(p1, p2, p3, nrow = 1)
 ```
 
-When using a scatter plot to assess a continuous variable against a categorical variable a stip plot will form.  Here we assess the `Sale_Price` to the number of above ground bedrooms (`Bedroom_AbvGr`).  Due to the size of this data set, the top left strip plot has a lot of overlaid data points.  We can use `geom_jitter` to add a little variation to our plot (top right), which allows us to see where heavier concentrations of points exist. Alternatively, we can use boxplots and violin plots to compare the distributions of `Sale_Price` to `Bedroom_AbvGr`.  Each plot provides different insights to the different features (i.e. outliers, clustering, median values).
+When using a scatter plot to assess a continuous variable against a categorical variable a strip plot will form.  Here we assess the `Sale_Price` to the number of above ground bedrooms (`Bedroom_AbvGr`).  Due to the size of this data set, the top left strip plot has a lot of overlaid data points.  We can use `geom_jitter` to add a little variation to our plot (top right), which allows us to see where heavier concentrations of points exist. Alternatively, we can use boxplots and violin plots to compare the distributions of `Sale_Price` to `Bedroom_AbvGr`.  Each plot provides different insights to the different features (i.e. outliers, clustering, median values).
 
 
 ```{r int_scatter, fig.width=8, fig.height=5}
